@@ -971,5 +971,46 @@ document.addEventListener('keydown', (e)=>{
   }
 })();
 </script>
+<script>
+(function(){
+  if (window.__sortCatsApplied) return;
+  window.__sortCatsApplied = true;
+
+  function sortSelectOptionsES(select){
+    if(!select) return;
+    const opts = Array.from(select.options);
+    if(opts.length <= 1) return;
+    const head = opts.shift(); // keep "Todas las categorías"
+    const sorted = opts.sort((a,b)=> a.text.localeCompare(b.text, 'es', {sensitivity:'base'}));
+    select.innerHTML = '';
+    select.appendChild(head);
+    sorted.forEach(o=> select.appendChild(o));
+  }
+
+  const origPopulate = window.populatePanelFilters;
+  if (typeof origPopulate === 'function'){
+    window.populatePanelFilters = function(){
+      try { origPopulate.apply(this, arguments); } finally {
+        const sel = document.getElementById('selCatPanel');
+        sortSelectOptionsES(sel);
+      }
+    };
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      sortSelectOptionsES(document.getElementById('selCatPanel'));
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const selMode = document.getElementById('selModePanel');
+    if(selMode){
+      selMode.addEventListener('change', function(){
+        setTimeout(function(){ sortSelectOptionsES(document.getElementById('selCatPanel')); }, 0);
+      });
+    }
+    setTimeout(function(){ sortSelectOptionsES(document.getElementById('selCatPanel')); }, 0);
+  });
+})();
+</script>
 </body>
 </html>
