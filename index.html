@@ -1,0 +1,975 @@
+
+<!DOCTYPE html>
+
+<html data-theme="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Generador de Prompts — Full Offline (v9)</title>
+<style>
+:root{
+  --bg:#f6f8fc; --panel:#ffffff; --panel2:#eef2fb; --text:#162045; --muted:#5a6387;
+  --border:#d8e0f2; --accent:#2a5bff; --danger:#d73a3a; --ok:#00a88b; --shadow:0 6px 24px rgba(22,32,69,.06);
+}
+:root[data-theme="dark"]{
+  --bg:#0f172a; --panel:#0b1223; --panel2:#0d152a; --text:#e5e7ef; --muted:#9aa3c7;
+  --border:#1f2b4a; --accent:#6aa0ff; --danger:#ff6565; --ok:#11c8ac; --shadow:0 6px 24px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;padding:16px 16px 80px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+h1{margin:0 0 6px;font-size:1.3rem}
+.lead{color:var(--muted);margin:0 0 10px}
+.header{display:flex;align-items:center;justify-content:space-between;background:transparent;margin-bottom:8px}
+.theme-btn{border:1px solid var(--border);background:var(--panel);border-radius:12px;width:44px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);color:#20305a}
+.theme-btn svg{width:22px;height:22px;display:block}
+:root[data-theme="dark"] .theme-btn{background:#0b1223;border-color:#23345d;color:#e8eefc}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.span-8{grid-column:span 8} .span-4{grid-column:span 4} .span-12{grid-column:1/-1}
+label{display:block;font-weight:700;margin:10px 0 6px}
+input[type=text],textarea,select{width:100%;background:#fff;border:1px solid var(--border);color:#111;padding:10px 12px;border-radius:10px;outline:none}
+:root[data-theme="dark"] input[type=text], :root[data-theme="dark"] textarea, :root[data-theme="dark"] select{background:#0f1a33;color:#e5e7ef;border-color:#29375c}
+textarea{min-height:68px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#eef3ff;color:#0f2c9e;cursor:pointer;font-weight:800}
+.btn.primary{background:linear-gradient(180deg,var(--accent),#1c4cff);color:#fff;border-color:#1c4cff}
+.btn.flat{background:#fff} .btn.danger{background:#ffe9e9;color:var(--danger)}
+.btn.ok{background:#e7fbf6;color:#066b59} .btn.small{font-size:12px;padding:6px 10px}
+:root[data-theme="dark"] .btn.flat{background:#0f1a33;color:#e5e7ef}
+.out{background:#fff;border:1px dashed #cbd6ff;border-radius:12px;padding:12px;min-height:120px;white-space:pre-wrap;color:#111}
+:root[data-theme="dark"] .out{background:#0f1a33;border-color:#2a3c6f;color:#e5e7ef}
+.hr{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:12px 0}
+.muted{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:8px;margin-bottom:10px} .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#fff;color:#3b4a86;cursor:pointer}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)} .hide{display:none}
+.kbd{background:#fff;border:1px solid var(--border);border-bottom-width:2px;padding:2px 6px;border-radius:6px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+/* Dropdowns */
+.drop{border:1px solid var(--border);border-radius:10px;background:var(--panel2);margin-top:6px;padding:8px}
+.drop summary{cursor:pointer;font-weight:700;color:#2a3a8a;list-style:none} .drop[open]{background:#eaf0ff}
+:root[data-theme="dark"] .drop{background:#0f1a33} :root[data-theme="dark"] .drop[open]{background:#0f203f}
+.drop summary::-webkit-details-marker{display:none}
+.opt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
+.opt{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:6px 8px}
+:root[data-theme="dark"] .opt{background:#0b1223;color:#e5e7ef;border-color:#23345d}
+.ctrls{display:flex;gap:8px;margin-top:8px}
+/* Presets */
+.preset-list{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fafbff}
+:root[data-theme="dark"] .preset-list{background:#0f1a33}
+.preset-item{padding:8px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fff;position:relative}
+:root[data-theme="dark"] .preset-item{background:#0b1223}
+.preset-item:hover{border-color:#a9b8ff}
+.preset-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.preset-cat{font-size:11px; line-height:1; padding:3px 8px; margin-right:8px}
+.preset-actions{display:flex;gap:10px;align-items:center}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#eef3ff;color:#0f2c9e;border:1px solid var(--border);font-size:11px}
+/* Presets toolbar (siempre visible) */
+.presets-toolbar{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:6px 0 10px}
+.icon-btn{width:40px;height:36px;border-radius:10px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow)}
+:root[data-theme="dark"] .icon-btn{background:#0f1a33;border-color:#23345d}
+.icon-btn svg{width:20px;height:20px}
+.toolbar-selects{display:flex;gap:10px;flex:1}
+.toolbar-selects select{min-width:0}
+/* Search dialog */
+dialog{border:none;border-radius:14px;padding:0;box-shadow:0 18px 60px rgba(0,0,0,.25);max-width:720px;width:92%}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.search-dialog{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.search-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+.search-body{padding:12px 14px}
+.search-row{display:flex;gap:10px;align-items:center}
+.search-row input[type=text]{flex:1}
+@media(max-width:980px){.span-8,.span-4{grid-column:1/-1}.row{grid-template-columns:1fr} .toolbar-selects{flex-direction:column}}
+/* Tooltip & toast */
+.tooltip{position:fixed;z-index:9999;pointer-events:none;background:#111827;color:#fff;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:12px;max-width:320px;display:none;white-space:normal}
+.tooltip .tline{opacity:.9;margin:2px 0} .tooltip .tlabel{opacity:.75}
+.toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;opacity:.95;display:none}
+.toast.show{display:block}
+
+/* === Refinements v9.5 === */
+/* Caret on dropdown summaries (accent for all) */
+.drop summary{ position:relative; padding-right:28px; }
+.drop summary::after{
+  content:"▼";
+  position:absolute; right:8px; top:8px;
+  font-size:12px; line-height:1;
+  color:var(--accent);
+  transition:transform .18s ease;
+  transform-origin:50% 55%;
+}
+.drop[open] summary::after{ transform:rotate(180deg) }
+/* Dark mode: clearer summary titles */
+:root[data-theme="dark"] .drop summary{
+  color:#f2f7f3;
+  text-shadow:0 1px 0 rgba(0,0,0,.3);
+}
+
+/* Tabs (Imagen/Video) more prominent & rectangular */
+.tabs{ gap:10px; margin-bottom:12px }
+.tab{
+  padding:10px 16px;
+  height:44px; display:flex; align-items:center;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  font-weight:800;
+  box-shadow:var(--shadow);
+}
+.tab.active{
+  background:linear-gradient(180deg,var(--accent),#1c4cff);
+  color:#fff;
+  border-color:#1c4cff;
+}
+
+/* Selects key height/shape retained (if present from previous tweaks) */
+select, .toolbar-selects select{
+  min-height:44px;
+  border-radius:12px;
+}
+
+/* Dark mode search modal title must be clear */
+:root[data-theme="dark"] .search-head strong{ color:#f2f7f3 }
+
+/* Dark mode: make the presets search icon (lupa) clear as well */
+:root[data-theme="dark"] #openSearch{ color:#eafbea }
+
+
+/* Dark mode: close icon of search modal clear */
+:root[data-theme="dark"] .modal .close-btn{
+  color:#f2f7f3;
+}
+
+
+/* Ensure section order: title -> dropdown -> textarea */
+.section-block{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+
+/* v9.7 fixes */
+/* Dark mode: make the close icon of the search modal clear */
+:root[data-theme="dark"] #closeSearch{ color:#f2f7f3 !important; }
+
+
+/* Flash highlight on textarea after apply */
+.flash{
+  outline:2px solid var(--accent);
+  box-shadow:0 0 0 4px rgba(42,91,255,.18);
+  transition:outline-color .4s ease, box-shadow .4s ease;
+}
+
+
+/* Animation for collapsing dropdown before closing */
+@keyframes shrinkClose {
+  0% { transform:scaleY(1); opacity:1; }
+  100% { transform:scaleY(0); opacity:0; }
+}
+.drop.closing {
+  animation:shrinkClose 0.22s ease forwards;
+  transform-origin:top;
+}
+
+/* Dark mode inactive main selection buttons */
+:root[data-theme="dark"] .tab{
+  background:var(--panel);
+  color:#ccd5cc;
+  border-color:var(--border);
+}
+:root[data-theme="dark"] .tab.active{
+  background:linear-gradient(180deg,var(--accent),#1c4cff);
+  color:#fff;
+}
+
+
+html, body { overflow-x: hidden; }
+.opt { min-width: 0; }
+.opt span { overflow-wrap: anywhere; }
+.ctrls { flex-wrap: wrap; }
+@media(max-width:980px){
+  .span-8, .span-4 { grid-column: 1 / -1; }
+  .row { grid-template-columns: 1fr; }
+  .toolbar-selects { flex-direction: column; }
+  .opt-grid { grid-template-columns: 1fr; }
+}
+dialog { max-width: 720px; width: 92%; max-height: 90vh; }
+.search-body { max-height: 60vh; overflow: auto; }
+</style>
+<style>
+/* Hide modal dialog but keep DOM for compatibility */
+#dlgSearch{ display:none !important; }
+
+/* Toolbar & inline search */
+.presets-toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.presets-toolbar > .search-inline{ flex:1 0 100%; margin-top:6px; margin-left:0; }
+
+/* 68/32 grid on wide, stack on mobile */
+.presets-toolbar .search-inline{ display:grid; grid-template-columns: 68% 32%; align-items:center; column-gap:12px; padding-right:12px; }
+@media (max-width:980px){
+  .presets-toolbar .search-inline{ grid-template-columns: 1fr; row-gap:6px; padding-right:0; }
+}
+
+.search-field{ position:relative; width:100%; max-width:none; }
+.search-field .search-icon{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:18px; height:18px; opacity:.75; pointer-events:none; }
+
+.search-field input{
+  width:100%;
+  padding:10px 16px 10px 40px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:transparent;
+  color:#111;
+  outline:none;
+  min-height:44px;
+}
+:root[data-theme="dark"] .search-field input{
+  color:#e5e7ef; border-color:#29375c; background:#0f1a33;
+}
+.search-field input::placeholder{ opacity:.7; }
+:root[data-theme="dark"] .search-field input::placeholder{ color:#9aa7c7; }
+
+/* Counter placement & look */
+.search-inline .search-count{
+  justify-self:end; text-align:right; white-space:nowrap;
+  font-size:0.95rem; line-height:1.1; margin:0; padding:0;
+}
+
+/* Buttons & selects spacing */
+.btn{ padding:10px 12px; } .btn.small{ padding:6px 10px; }
+select{ padding-right:32px; } .toolbar-selects select{ min-width:150px; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto !important; }
+  .flash{ animation:none !important; } .closing{ transition:none !important; }
+}
+
+/* Mobile typography tweaks */
+@media (max-width:600px){
+  .presets-toolbar .search-inline .search-count{ font-size:0.85rem; }
+  .presets-toolbar .search-field input{ font-size:0.95rem; }
+}
+@media (max-width:380px){
+  .presets-toolbar .search-inline .search-count{ font-size:0.8rem; }
+  .presets-toolbar .search-field input{ font-size:0.9rem; }
+}
+</style>
+<style>
+/* Hide legacy search button (we use inline search now) */
+.presets-toolbar #openSearch{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="header">
+<div>
+<h1>🧰 Generador de Prompts — Full Offline (v9)</h1>
+<p class="lead">Corrección de “Aplicar preset”, filtros siempre visibles y búsqueda con resultados en vivo.</p>
+</div>
+<button aria-label="Cambiar tema" class="theme-btn" id="themeBtn" title="Cambiar tema">
+<svg fill="none" id="iconMoon" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+</svg>
+<svg fill="none" id="iconSun" stroke="currentColor" stroke-width="2" style="display:none" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.54 6.46-1.41-1.41M7.88 7.88 6.46 6.46m10.96 0-1.42 1.42M7.88 16.12 6.46 17.54"></path>
+</svg>
+</button>
+</div>
+<div class="tabs">
+<div class="tab active" data-mode="img">🖼 Imagen</div>
+<div class="tab" data-mode="vid">🎥 Video (Sora)</div>
+</div>
+<div class="grid">
+<section class="card span-8">
+<h3 id="formTitle">Modo Imagen</h3>
+<!-- ... (form igual que v8) ... -->
+<div id="form-img">
+<div class="row">
+<div>
+<label for="temaI">Tema principal (texto libre)</label>
+<textarea id="temaI" placeholder="Ej: guerrero medieval con espada mágica"></textarea>
+</div>
+<div>
+<label for="ambI">Ambiente / contexto (texto libre)</label>
+<textarea id="ambI" placeholder="Ej: bosque nevado, callejón con neón, templo flotante"></textarea>
+</div>
+</div>
+<label for="detI">Rasgos y detalles (texto libre)</label>
+<textarea id="detI" placeholder="Ej: armadura dorada, capa ondeando, runas brillantes"></textarea>
+<div class="row">
+<div>
+<label for="estI">Estilo artístico (texto libre o selección)</label>
+<textarea id="estI" placeholder="Ej: shōnen dinámico, ukiyo‑e, ilustración digital"></textarea>
+<details class="drop">
+<summary>🎨 Estilos</summary>
+<div class="opt-grid" id="libEstI"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="estI">Aplicar</button>
+<button class="btn small" data-clear="libEstI">Limpiar selección</button>
+</div>
+</details>
+</div>
+<div>
+<label for="luzI">Iluminación y paleta (texto libre o selección)</label>
+<textarea id="luzI" placeholder="Ej: luz dorada al amanecer, neón púrpura y dorado"></textarea>
+<details class="drop">
+<summary>💡 Iluminaciones / Colores</summary>
+<div class="opt-grid" id="libLuzI"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="luzI">Aplicar</button>
+<button class="btn small" data-clear="libLuzI">Limpiar selección</button>
+</div>
+</details>
+</div>
+</div>
+<div class="row">
+<div>
+<label for="encI">Encuadre / ángulo (texto libre o selección)</label>
+<textarea id="encI" placeholder="Ej: primer plano con bokeh, plano general épico"></textarea>
+<details class="drop">
+<summary>🎥 Encuadres</summary>
+<div class="opt-grid" id="libEncI"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="encI">Aplicar</button>
+<button class="btn small" data-clear="libEncI">Limpiar selección</button>
+</div>
+</details>
+</div>
+<div>
+<label for="negI">Exclusiones / negativo (texto libre)</label>
+<textarea id="negI" placeholder="Ej: sin texto, sin logos, sin duplicados"></textarea>
+</div>
+</div>
+<div class="row">
+<div>
+<label for="ratioI">Relación de aspecto</label>
+<select id="ratioI"></select>
+</div>
+<div>
+<label for="resI">Resolución objetivo</label>
+<select id="resI"></select>
+</div>
+</div>
+<div class="hr"></div>
+<div class="actions">
+<button class="btn primary" id="genImg" type="button">⚙️ Generar</button>
+<button class="btn" id="randImg" type="button">🎲 Aleatorio</button>
+<button class="btn flat" id="clearImg" type="button">🧹 Limpiar</button>
+<button class="btn" id="copyImg" type="button">📋 Copiar</button>
+<button class="btn" id="exportImg" type="button">⬇️ Exportar .txt</button>
+<button class="btn ok" id="savePresetImg" type="button">➕ Guardar como preset</button>
+</div>
+<label>Prompt (Imagen)</label>
+<div class="out" contenteditable="true" id="outImg"></div>
+</div>
+<div class="hide" id="form-vid">
+<div class="row">
+<div>
+<label for="temaV">Escena principal (texto libre)</label>
+<textarea id="temaV" placeholder="Ej: caminata por mercado nocturno"></textarea>
+</div>
+<div>
+<label for="ambV">Ambiente / contexto (texto libre)</label>
+<textarea id="ambV" placeholder="Ej: noche con niebla, campanas lejanas"></textarea>
+</div>
+</div>
+<label for="actV">Personajes y acciones (texto libre)</label>
+<textarea id="actV" placeholder="Ej: dos personajes dialogan; cámara sigue al protagonista"></textarea>
+<div class="row">
+<div>
+<label for="filmV">Estilo visual / de filmación</label>
+<textarea id="filmV" placeholder="Ej: cinematográfico moderno, experimental, anime dinámico"></textarea>
+<details class="drop">
+<summary>🎨 Estilos</summary>
+<div class="opt-grid" id="libFilmV"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="filmV">Aplicar</button>
+<button class="btn small" data-clear="libFilmV">Limpiar selección</button>
+</div>
+</details>
+</div>
+<div>
+<label for="camV">Movimiento de cámara</label>
+<textarea id="camV" placeholder="Ej: travelling lateral, paneo lento, dron estable"></textarea>
+<details class="drop">
+<summary>🎥 Cámara</summary>
+<div class="opt-grid" id="libCamV"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="camV">Aplicar</button>
+<button class="btn small" data-clear="libCamV">Limpiar selección</button>
+</div>
+</details>
+</div>
+</div>
+<div class="row">
+<div>
+<label for="luzV">Iluminación / paleta</label>
+<textarea id="luzV" placeholder="Ej: luz lunar plateada, god rays, tonos fríos"></textarea>
+<details class="drop">
+<summary>💡 Iluminaciones / Colores</summary>
+<div class="opt-grid" id="libLuzV"></div>
+<div class="ctrls">
+<button class="btn small flat" data-apply="luzV">Aplicar</button>
+<button class="btn small" data-clear="libLuzV">Limpiar selección</button>
+</div>
+</details>
+</div>
+<div>
+<label for="durV">Duración y formato</label>
+<input id="durV" placeholder="Ej: 12s, 16:9, 24 fps" type="text"/>
+</div>
+</div>
+<label for="tranV">Transiciones / cambios de plano</label>
+<textarea id="tranV" placeholder="Ej: corte a primer plano; fundido a negro final"></textarea>
+<label for="sndV">Elementos de sonido (opcional)</label>
+<input id="sndV" placeholder="Ej: viento suave, pasos sobre nieve, cuerdas ligeras" type="text"/>
+<div class="hr"></div>
+<div class="actions">
+<button class="btn primary" id="genVid" type="button">⚙️ Generar</button>
+<button class="btn" id="randVid" type="button">🎲 Aleatorio</button>
+<button class="btn flat" id="clearVid" type="button">🧹 Limpiar</button>
+<button class="btn" id="copyVid" type="button">📋 Copiar</button>
+<button class="btn" id="exportVid" type="button">⬇️ Exportar .txt</button>
+<button class="btn ok" id="savePresetVid" type="button">➕ Guardar como preset</button>
+</div>
+<label>Prompt (Sora)</label>
+<div class="out" contenteditable="true" id="outVid"></div>
+</div>
+</section>
+<aside class="card span-4">
+<h3>Presets</h3>
+<div class="presets-toolbar">
+<button class="icon-btn" id="openSearch" title="Buscar presets (/)">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+</svg>
+</button>
+<div class="search-inline">
+  <div class="search-field">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" stroke="currentColor" fill="none" stroke-width="2"></circle>
+      <path d="m21 21-4.3-4.3" stroke="currentColor" fill="none" stroke-width="2"></path>
+    </svg>
+    <input id="qPresetInline" type="search" placeholder="Buscar presets ( / )" autocomplete="off" />
+  </div>
+  <span class="search-count" id="resultCount" aria-live="polite"></span>
+</div>
+<div class="toolbar-selects">
+<select id="selCatPanel"><option value="">Todas las categorías</option></select>
+<select id="selModePanel">
+<option selected="" value="img">Imagen</option>
+<option value="vid">Video</option>
+</select>
+</div>
+</div>
+<div class="preset-list" id="presetList"></div>
+<div class="hr"></div>
+<div class="actions">
+<button class="btn" id="exportJSON" type="button">📤 Exportar JSON</button>
+<button class="btn danger" id="clearCustom" type="button">🗑 Borrar presets personalizados</button>
+</div>
+<p class="muted">Todo viene embebido. Exporta y comparte tus personalizados cuando quieras.</p>
+<p class="muted">Atajos: <span class="kbd">Ctrl/Cmd + Enter</span> genera prompt • <span class="kbd">/</span> abre buscador.</p>
+</aside>
+</div>
+<div class="toast" id="toast">Hecho</div>
+<div class="tooltip" id="tooltip"></div>
+<dialog id="dlgSearch">
+<div class="search-dialog">
+<div class="search-head">
+<strong>Buscar presets</strong>
+<button class="icon-btn" id="closeSearch" title="Cerrar" type="button">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 6 6 18M6 6l12 12"></path>
+</svg>
+</button>
+</div>
+<div class="search-body">
+<div class="search-row">
+<input id="qPreset" placeholder="Escribe para buscar por nombre, descripción o estilo..." type="text"/>
+</div>
+</div>
+</div>
+</dialog>
+
+
+
+<script>
+(function(){
+  const EMBED_PRESETS = {"imagen_presets":[{"id":1,"nombre":"Manga B/N dramático","descripcion":"Manga monocromo, alto contraste, primer plano con bokeh","categoria":"Anime & Manga","estilo":"Manga monocromo","iluminacion":"Alto contraste","encuadre":"Primer plano con bokeh","formato":"3:2 · 1920×1080"},{"id":2,"nombre":"Shōnen urbano dinámico","descripcion":"Ilustración shōnen, neón púrpura/dorado, plano americano","categoria":"Anime & Manga","estilo":"Ilustración shōnen","iluminacion":"Neón púrpura/dorado","encuadre":"Plano americano","formato":"16:9"},{"id":3,"nombre":"Pastoral anime pintado a mano","descripcion":"Anime tradicional, luz dorada de amanecer, plano general épico","categoria":"Anime & Manga","estilo":"Anime tradicional","iluminacion":"Luz dorada de amanecer","encuadre":"Plano general épico","formato":"16:9"},{"id":4,"nombre":"Choque de energía shōnen","descripcion":"Anime acción, luz intensa puntual, plano americano","categoria":"Anime & Manga","estilo":"Anime acción","iluminacion":"Luz intensa puntual","encuadre":"Plano americano","formato":"16:9"},{"id":5,"nombre":"Técnicas ninja en aldea","descripcion":"Anime acción, luz cálida atardecer, plano medio","categoria":"Anime & Manga","estilo":"Anime acción","iluminacion":"Luz cálida atardecer","encuadre":"Plano medio","formato":"16:9"},{"id":6,"nombre":"Aventura pirata manga","descripcion":"Manga aventura, luz solar intensa, plano general","categoria":"Anime & Manga","estilo":"Manga aventura","iluminacion":"Luz solar intensa","encuadre":"Plano general","formato":"16:9"},{"id":7,"nombre":"Duelo espiritual con espada","descripcion":"Acción épica, contraluz, plano medio","categoria":"Anime & Manga","estilo":"Acción épica","iluminacion":"Contraluz","encuadre":"Plano medio","formato":"16:9"},{"id":8,"nombre":"Retrato heroico escolar","descripcion":"Ilustración shōnen, contraluz dramático, retrato 3:2","categoria":"Anime & Manga","estilo":"Ilustración shōnen","iluminacion":"Contraluz dramático","encuadre":"Retrato 3:2","formato":"3:2"},{"id":9,"nombre":"Heroína mágica brillante","descripcion":"Anime fantástico, luz difusa suave, plano medio","categoria":"Anime & Manga","estilo":"Anime fantástico","iluminacion":"Luz difusa suave","encuadre":"Plano medio","formato":"4:3"},{"id":10,"nombre":"Mecha de combate urbano","descripcion":"Anime mecha, luz fría y neón, gran angular","categoria":"Anime & Manga","estilo":"Anime mecha","iluminacion":"Luz fría y neón","encuadre":"Gran angular","formato":"16:9"},{"id":11,"nombre":"Slice of life escolar","descripcion":"Anime cotidiano, luz natural suave, plano medio","categoria":"Anime & Manga","estilo":"Anime cotidiano","iluminacion":"Luz natural suave","encuadre":"Plano medio","formato":"3:2"},{"id":12,"nombre":"Romance shojo primaveral","descripcion":"Anime romántico, luz cálida, plano medio","categoria":"Anime & Manga","estilo":"Anime romántico","iluminacion":"Luz cálida","encuadre":"Plano medio","formato":"3:2"},{"id":13,"nombre":"Samurai nocturno lluvioso","descripcion":"Arte japonés dramático, neón y contraluz, plano americano","categoria":"Anime & Manga","estilo":"Arte japonés dramático","iluminacion":"Neón y contraluz","encuadre":"Plano americano","formato":"16:9"},{"id":14,"nombre":"Guerreros de fantasía oriental","descripcion":"Ilustración fantástica, luz ambiental mística, plano general","categoria":"Anime & Manga","estilo":"Ilustración fantástica","iluminacion":"Luz ambiental mística","encuadre":"Plano general","formato":"21:9"},{"id":15,"nombre":"Escena de torneo de artes marciales","descripcion":"Anime deportivo, luz intensa, plano general","categoria":"Anime & Manga","estilo":"Anime deportivo","iluminacion":"Luz intensa","encuadre":"Plano general","formato":"16:9"},{"id":16,"nombre":"Cartoon sitcom plano","descripcion":"Cartoon 2D, iluminación uniforme, plano medio","categoria":"Animación 2D & 3D","estilo":"Cartoon 2D","iluminacion":"Iluminación uniforme","encuadre":"Plano medio","formato":"1:1"},{"id":17,"nombre":"Animación familiar 3D","descripcion":"Animación CGI, luz cálida difusa, plano medio","categoria":"Animación 2D & 3D","estilo":"Animación CGI","iluminacion":"Luz cálida difusa","encuadre":"Plano medio","formato":"16:9"},{"id":18,"nombre":"Ilustración 2D estilo clásico","descripcion":"Animación tradicional, luz uniforme, plano medio","categoria":"Animación 2D & 3D","estilo":"Animación tradicional","iluminacion":"Luz uniforme","encuadre":"Plano medio","formato":"4:3"},{"id":19,"nombre":"Animación surreal onírica","descripcion":"Arte surreal, luz difusa suave, gran angular","categoria":"Animación 2D & 3D","estilo":"Arte surreal","iluminacion":"Luz difusa suave","encuadre":"Gran angular","formato":"16:9"},{"id":20,"nombre":"Cortometraje infantil suave","descripcion":"Animación infantil, luz cálida, plano medio","categoria":"Animación 2D & 3D","estilo":"Animación infantil","iluminacion":"Luz cálida","encuadre":"Plano medio","formato":"4:3"},{"id":21,"nombre":"Animación experimental minimalista","descripcion":"Arte minimalista, luz uniforme, plano frontal","categoria":"Animación 2D & 3D","estilo":"Arte minimalista","iluminacion":"Luz uniforme","encuadre":"Plano frontal","formato":"1:1"},{"id":22,"nombre":"Acuarela animada","descripcion":"Ilustración acuarela, luz natural, plano medio","categoria":"Animación 2D & 3D","estilo":"Ilustración acuarela","iluminacion":"Luz natural","encuadre":"Plano medio","formato":"4:3"},{"id":23,"nombre":"Plastilina digital","descripcion":"Stop-motion digital, luz difusa, plano medio","categoria":"Animación 2D & 3D","estilo":"Stop-motion digital","iluminacion":"Luz difusa","encuadre":"Plano medio","formato":"4:3"},{"id":24,"nombre":"Retro 80s neón","descripcion":"Retrowave, neón intenso, gran angular","categoria":"Retro & Pixel","estilo":"Retrowave","iluminacion":"Neón intenso","encuadre":"Gran angular","formato":"16:9"},{"id":25,"nombre":"Pixel art retro","descripcion":"Pixel art, luz uniforme, isométrica","categoria":"Retro & Pixel","estilo":"Pixel art","iluminacion":"Luz uniforme","encuadre":"Isométrica","formato":"1:1"},{"id":26,"nombre":"Pixel art minimalista","descripcion":"Pixel art minimal, luz uniforme, isométrica","categoria":"Retro & Pixel","estilo":"Pixel art minimal","iluminacion":"Luz uniforme","encuadre":"Isométrica","formato":"1:1"},{"id":27,"nombre":"Low‑poly isométrico","descripcion":"Low‑poly, uniforme, vista aérea/isométrica","categoria":"Retro & Pixel","estilo":"Low‑poly","iluminacion":"Uniforme","encuadre":"Vista aérea/Isométrica","formato":"1:1"},{"id":28,"nombre":"Low‑poly isométrico colorido","descripcion":"Low‑poly colorido, luz suave, vista aérea/isométrica","categoria":"Retro & Pixel","estilo":"Low‑poly colorido","iluminacion":"Luz suave","encuadre":"Vista aérea/Isométrica","formato":"1:1"},{"id":29,"nombre":"Estilo 16‑bit aventura","descripcion":"Pixel art 16‑bit, luz uniforme, vista lateral","categoria":"Retro & Pixel","estilo":"Pixel art 16‑bit","iluminacion":"Luz uniforme","encuadre":"Vista lateral","formato":"4:3"},{"id":30,"nombre":"Consola portátil 90s","descripcion":"Pixel art monocromo, luz uniforme, vista lateral","categoria":"Retro & Pixel","estilo":"Pixel art monocromo","iluminacion":"Luz uniforme","encuadre":"Vista lateral","formato":"1:1"},{"id":31,"nombre":"Vaporwave glitch","descripcion":"Vaporwave, neón rosa/azul, gran angular","categoria":"Retro & Pixel","estilo":"Vaporwave","iluminacion":"Neón rosa/azul","encuadre":"Gran angular","formato":"16:9"},{"id":32,"nombre":"Producto estudio premium","descripcion":"Fotografía de producto, softbox lateral + rim, macro/detalle","categoria":"Fotografía & Producto","estilo":"Fotografía de producto","iluminacion":"Softbox lateral + rim","encuadre":"Macro/Detalle","formato":"4:3"},{"id":33,"nombre":"Moda editorial cromada","descripcion":"Fotografía editorial, teal & orange + backlight, plano americano","categoria":"Fotografía & Producto","estilo":"Fotografía editorial","iluminacion":"Teal & orange + backlight","encuadre":"Plano americano","formato":"3:2"},{"id":34,"nombre":"Macro botánico","descripcion":"Macro arte, pastel suave, macro/detalle","categoria":"Fotografía & Producto","estilo":"Macro arte","iluminacion":"Pastel suave","encuadre":"Macro/Detalle","formato":"4:3"},{"id":35,"nombre":"Analógico grunge 35mm","descripcion":"Fotografía analógica, luz cálida con grano, plano medio","categoria":"Fotografía & Producto","estilo":"Fotografía analógica","iluminacion":"Luz cálida con grano","encuadre":"Plano medio","formato":"3:2"},{"id":36,"nombre":"Comida gourmet de estudio","descripcion":"Food photography, luz lateral dramática, plano detalle","categoria":"Fotografía & Producto","estilo":"Food photography","iluminacion":"Luz lateral dramática","encuadre":"Plano detalle","formato":"4:3"},{"id":37,"nombre":"Producto lujo con reflejo","descripcion":"Publicidad premium, backlight dramático, plano medio","categoria":"Fotografía & Producto","estilo":"Publicidad premium","iluminacion":"Backlight dramático","encuadre":"Plano medio","formato":"16:9"},{"id":38,"nombre":"Macro joyería brillante","descripcion":"Macro joyería, puntos especulares, macro/detalle","categoria":"Fotografía & Producto","estilo":"Macro joyería","iluminacion":"Puntos especulares","encuadre":"Macro/Detalle","formato":"4:3"},{"id":39,"nombre":"Editorial deportiva congelada","descripcion":"Deporte editorial, alto contraste, plano americano","categoria":"Fotografía & Producto","estilo":"Deporte editorial","iluminacion":"Alto contraste","encuadre":"Plano americano","formato":"3:2"},{"id":40,"nombre":"Interiores minimalistas luminosos","descripcion":"Arquitectura minimalista, luz natural suave, gran angular","categoria":"Fotografía & Producto","estilo":"Arquitectura minimalista","iluminacion":"Luz natural suave","encuadre":"Gran angular","formato":"16:9"},{"id":41,"nombre":"Arquitectura brutalista 3D","descripcion":"CGI fotorrealista, volumetric lighting, teleobjetivo comprimido","categoria":"Arquitectura & Escenarios","estilo":"CGI fotorrealista","iluminacion":"Volumetric lighting","encuadre":"Teleobjetivo comprimido","formato":"16:9"},{"id":42,"nombre":"Solarpunk luminoso","descripcion":"Ilustración digital, luz cálida volumétrica, plano general","categoria":"Arquitectura & Escenarios","estilo":"Ilustración digital","iluminacion":"Luz cálida volumétrica","encuadre":"Plano general","formato":"21:9"},{"id":43,"nombre":"Dieselpunk industrial","descripcion":"Ilustración industrial, tonos grises/cobrizos, teleobjetivo","categoria":"Arquitectura & Escenarios","estilo":"Ilustración industrial","iluminacion":"Tonos grises/cobrizos","encuadre":"Teleobjetivo","formato":"21:9"},{"id":44,"nombre":"Cyber lluvioso nocturno","descripcion":"Neo‑noir urbano, neón bicolor, charcos reflectantes, plano americano","categoria":"Arquitectura & Escenarios","estilo":"Neo‑noir urbano","iluminacion":"Neón bicolor, charcos reflectantes","encuadre":"Plano americano","formato":"16:9"},{"id":45,"nombre":"Steampunk detallado","descripcion":"Steampunk, luz cálida, plano medio","categoria":"Arquitectura & Escenarios","estilo":"Steampunk","iluminacion":"Luz cálida","encuadre":"Plano medio","formato":"4:3"},{"id":46,"nombre":"Futurismo urbano brillante","descripcion":"CGI estilizado, neón sutil, gran angular","categoria":"Arquitectura & Escenarios","estilo":"CGI estilizado","iluminacion":"Neón sutil","encuadre":"Gran angular","formato":"16:9"},{"id":47,"nombre":"Pueblo costero mediterráneo","descripcion":"Pintura luminosa, luz solar intensa, plano general","categoria":"Arquitectura & Escenarios","estilo":"Pintura luminosa","iluminacion":"Luz solar intensa","encuadre":"Plano general","formato":"3:2"},{"id":48,"nombre":"Desierto rocoso cinematográfico","descripcion":"Cinemático desértico, atardecer cálido, plano general","categoria":"Arquitectura & Escenarios","estilo":"Cinemático desértico","iluminacion":"Atardecer cálido","encuadre":"Plano general","formato":"21:9"},{"id":49,"nombre":"Bosque encantado","descripcion":"Ilustración fantástica, luz filtrada y niebla, plano general","categoria":"Arquitectura & Escenarios","estilo":"Ilustración fantástica","iluminacion":"Luz filtrada y niebla","encuadre":"Plano general","formato":"16:9"},{"id":50,"nombre":"Templo flotante en cielo","descripcion":"Fantasía aérea, rayos volumétricos, gran angular","categoria":"Arquitectura & Escenarios","estilo":"Fantasía aérea","iluminacion":"Rayos volumétricos","encuadre":"Gran angular","formato":"21:9"},{"id":51,"nombre":"Ukiyo‑e contemporáneo","descripcion":"Ukiyo‑e, paleta azul/crema, cenital","categoria":"Arte & Conceptual","estilo":"Ukiyo‑e","iluminacion":"Paleta azul/crema","encuadre":"Cenital","formato":"5:4"},{"id":52,"nombre":"Collage surreal","descripcion":"Collage surreal, monocromo azul, gran angular","categoria":"Arte & Conceptual","estilo":"Collage surreal","iluminacion":"Monocromo azul","encuadre":"Gran angular","formato":"1:1"},{"id":53,"nombre":"Minimalismo geométrico","descripcion":"Minimalismo geométrico, alto contraste, plano medio","categoria":"Arte & Conceptual","estilo":"Minimalismo geométrico","iluminacion":"Alto contraste","encuadre":"Plano medio","formato":"4:3"},{"id":54,"nombre":"Fractal psicodélico","descripcion":"Arte fractal, saturada, gran angular","categoria":"Arte & Conceptual","estilo":"Arte fractal","iluminacion":"Saturada","encuadre":"Gran angular","formato":"16:9"},{"id":55,"nombre":"Arte surreal onírico","descripcion":"Surreal onírico, niebla desaturada, plano general","categoria":"Arte & Conceptual","estilo":"Surreal onírico","iluminacion":"Niebla desaturada","encuadre":"Plano general","formato":"16:9"},{"id":56,"nombre":"Pop art saturado","descripcion":"Pop art, colores primarios planos, frontal","categoria":"Arte & Conceptual","estilo":"Pop art","iluminacion":"Colores primarios planos","encuadre":"Frontal","formato":"1:1"},{"id":57,"nombre":"Arte de papel recortado","descripcion":"Paper cut, sombras suaves, plano medio","categoria":"Arte & Conceptual","estilo":"Paper cut","iluminacion":"Sombras suaves","encuadre":"Plano medio","formato":"4:3"},{"id":58,"nombre":"Óleo hiperrealista","descripcion":"Óleo hiperrealista, luz dirigida, plano medio","categoria":"Arte & Conceptual","estilo":"Óleo hiperrealista","iluminacion":"Luz dirigida","encuadre":"Plano medio","formato":"3:2"},{"id":59,"nombre":"Escultura digital abstracta","descripcion":"Materiales metálicos/líquidos, brillos controlados, gran angular","categoria":"Arte & Conceptual","estilo":"Materiales metálicos/líquidos","iluminacion":"Brillos controlados","encuadre":"Gran angular","formato":"16:9"},{"id":60,"nombre":"Isométrico futurista","descripcion":"Ilustración isométrica, iluminación dramática, vista aérea","categoria":"Arte & Conceptual","estilo":"Ilustración isométrica","iluminacion":"Iluminación dramática","encuadre":"Vista aérea","formato":"1:1"},{"id":61,"nombre":"Figura articulada retro","descripcion":"Muñeco de acción 80s, plástico mate, plano medio","categoria":"Figuras & Juguetes","estilo":"Muñeco de acción 80s","iluminacion":"Plástico mate","encuadre":"Plano medio","formato":"4:3"},{"id":62,"nombre":"Estética muñeca de moda","descripcion":"Muñeca fashion, brillo plástico rosa, plano medio","categoria":"Figuras & Juguetes","estilo":"Muñeca fashion","iluminacion":"Brillo plástico rosa","encuadre":"Plano medio","formato":"4:3"},{"id":63,"nombre":"Mini figura coleccionable","descripcion":"Cabeza grande vinilo, acabado mate, frontal 1:1","categoria":"Figuras & Juguetes","estilo":"Cabeza grande vinilo","iluminacion":"Acabado mate","encuadre":"Frontal 1:1","formato":"1:1"},{"id":64,"nombre":"Juguete con accesorios","descripcion":"Set temático, luz de estudio suave, plano medio","categoria":"Figuras & Juguetes","estilo":"Set temático","iluminacion":"Luz de estudio suave","encuadre":"Plano medio","formato":"4:3"},{"id":65,"nombre":"Ilustración chibi","descripcion":"Chibi, pasteles suaves, 1:1 frontal","categoria":"Figuras & Juguetes","estilo":"Chibi","iluminacion":"Pasteles suaves","encuadre":"1:1 frontal","formato":"1:1"},{"id":66,"nombre":"Diorama miniatura","descripcion":"Diorama, luz natural, plano general","categoria":"Figuras & Juguetes","estilo":"Diorama","iluminacion":"Luz natural","encuadre":"Plano general","formato":"16:9"},{"id":67,"nombre":"Figura de acción futurista","descripcion":"Armamento modular, rim light frío, plano medio","categoria":"Figuras & Juguetes","estilo":"Armamento modular","iluminacion":"Rim light frío","encuadre":"Plano medio","formato":"4:3"},{"id":68,"nombre":"Peluche kawaii","descripcion":"Peluche, luz suave, plano medio","categoria":"Figuras & Juguetes","estilo":"Peluche","iluminacion":"Luz suave","encuadre":"Plano medio","formato":"1:1"},{"id":69,"nombre":"Muñeco de madera artesanal","descripcion":"Juguete madera, acabado natural, plano medio","categoria":"Figuras & Juguetes","estilo":"Juguete madera","iluminacion":"Acabado natural","encuadre":"Plano medio","formato":"4:3"},{"id":70,"nombre":"Juguete robot vintage","descripcion":"Robot retro, pintura desgastada, plano medio","categoria":"Figuras & Juguetes","estilo":"Robot retro","iluminacion":"Pintura desgastada","encuadre":"Plano medio","formato":"4:3"},{"id":71,"nombre":"Y2K glossy","descripcion":"Y2K brillante, monocromo azul, plano medio","categoria":"Paletas & Luz","estilo":"Y2K brillante","iluminacion":"Monocromo azul","encuadre":"Plano medio","formato":"4:3"},{"id":72,"nombre":"Pop rosa brillante","descripcion":"Pop rosado, brillo plástico, plano medio","categoria":"Paletas & Luz","estilo":"Pop rosado","iluminacion":"Brillo plástico","encuadre":"Plano medio","formato":"4:3"},{"id":73,"nombre":"Cottagecore suave","descripcion":"Naturalista, luz difusa, plano general","categoria":"Paletas & Luz","estilo":"Naturalista","iluminacion":"Luz difusa","encuadre":"Plano general","formato":"3:2"},{"id":74,"nombre":"Vaporwave glitch","descripcion":"Vaporwave, neón rosa/azul, gran angular","categoria":"Paletas & Luz","estilo":"Vaporwave","iluminacion":"Neón rosa/azul","encuadre":"Gran angular","formato":"16:9"},{"id":75,"nombre":"Art déco futurista","descripcion":"Deco moderno, luz teatral, plano medio","categoria":"Paletas & Luz","estilo":"Deco moderno","iluminacion":"Luz teatral","encuadre":"Plano medio","formato":"4:3"},{"id":76,"nombre":"Horror gótico","descripcion":"Gótico dramático, luz de luna, plano general","categoria":"Paletas & Luz","estilo":"Gótico dramático","iluminacion":"Luz de luna","encuadre":"Plano general","formato":"3:2"},{"id":77,"nombre":"Amanecer sobre mar","descripcion":"Paisajismo, luz dorada, plano general","categoria":"Paletas & Luz","estilo":"Paisajismo","iluminacion":"Luz dorada","encuadre":"Plano general","formato":"16:9"},{"id":78,"nombre":"Monocromo azul con niebla","descripcion":"Monocromo, niebla fría, plano general","categoria":"Paletas & Luz","estilo":"Monocromo","iluminacion":"Niebla fría","encuadre":"Plano general","formato":"16:9"},{"id":79,"nombre":"Contraluz anaranjado","descripcion":"Cinemático, contraluz cálido, plano general","categoria":"Paletas & Luz","estilo":"Cinemático","iluminacion":"Contraluz cálido","encuadre":"Plano general","formato":"16:9"},{"id":80,"nombre":"Neón calle estrecha","descripcion":"Neón urbano, bicolor saturado, gran angular","categoria":"Paletas & Luz","estilo":"Neón urbano","iluminacion":"Bicolor saturado","encuadre":"Gran angular","formato":"16:9"},{"id":81,"nombre":"Guerreros intergalácticos","descripcion":"Space opera, luz de nebulosa, plano general","categoria":"Fantasía & Sci‑Fi","estilo":"Space opera","iluminacion":"Luz de nebulosa","encuadre":"Plano general","formato":"21:9"},{"id":82,"nombre":"Criatura mítica en caverna","descripcion":"Fantasy creature, spot cenital dramático, plano medio","categoria":"Fantasía & Sci‑Fi","estilo":"Fantasy creature","iluminacion":"Spot cenital dramático","encuadre":"Plano medio","formato":"16:9"},{"id":83,"nombre":"Magia elemental","descripcion":"Efectos místicos, partículas brillantes, plano medio","categoria":"Fantasía & Sci‑Fi","estilo":"Efectos místicos","iluminacion":"Partículas brillantes","encuadre":"Plano medio","formato":"16:9"},{"id":84,"nombre":"Castillo flotante","descripcion":"Fantasía aérea, rayos volumétricos, gran angular","categoria":"Fantasía & Sci‑Fi","estilo":"Fantasía aérea","iluminacion":"Rayos volumétricos","encuadre":"Gran angular","formato":"21:9"},{"id":85,"nombre":"Civilización alienígena","descripcion":"Arquitectura orgánica, tonos extraños, plano general","categoria":"Fantasía & Sci‑Fi","estilo":"Arquitectura orgánica","iluminacion":"Tonos extraños","encuadre":"Plano general","formato":"21:9"},{"id":86,"nombre":"Desierto alienígena","descripcion":"Sci‑fi desértico, cielo verdoso, plano general","categoria":"Fantasía & Sci‑Fi","estilo":"Sci‑fi desértico","iluminacion":"Cielo verdoso","encuadre":"Plano general","formato":"21:9"},{"id":87,"nombre":"Batalla de dragones","descripcion":"Épico fantástico, fuego y humo, gran angular","categoria":"Fantasía & Sci‑Fi","estilo":"Épico fantástico","iluminacion":"Fuego y humo","encuadre":"Gran angular","formato":"21:9"},{"id":88,"nombre":"Hechicero en biblioteca arcana","descripcion":"Fantasía arcana, luz de velas, plano medio","categoria":"Fantasía & Sci‑Fi","estilo":"Fantasía arcana","iluminacion":"Luz de velas","encuadre":"Plano medio","formato":"16:9"},{"id":89,"nombre":"Portal dimensional","descripcion":"Sci‑fi energético, resplandor pulsante, gran angular","categoria":"Fantasía & Sci‑Fi","estilo":"Sci‑fi energético","iluminacion":"Resplandor pulsante","encuadre":"Gran angular","formato":"16:9"},{"id":90,"nombre":"Bosque bioluminiscente","descripcion":"Naturaleza luminosa, brillos orgánicos, plano general","categoria":"Fantasía & Sci‑Fi","estilo":"Naturaleza luminosa","iluminacion":"Brillos orgánicos","encuadre":"Plano general","formato":"16:9"},{"id":91,"nombre":"Fauna salvaje al amanecer","descripcion":"Documental naturalista, luz dorada, plano general","categoria":"Naturaleza & Animales","estilo":"Documental naturalista","iluminacion":"Luz dorada","encuadre":"Plano general","formato":"16:9"},{"id":92,"nombre":"Aves en vuelo sincronizado","descripcion":"Documental aéreo, luz natural, plano general","categoria":"Naturaleza & Animales","estilo":"Documental aéreo","iluminacion":"Luz natural","encuadre":"Plano general","formato":"21:9"},{"id":93,"nombre":"Submarino tropical","descripcion":"Submarina, luz filtrada, gran angular","categoria":"Naturaleza & Animales","estilo":"Submarina","iluminacion":"Luz filtrada","encuadre":"Gran angular","formato":"16:9"},{"id":94,"nombre":"Tormenta de arena en desierto","descripcion":"Clima extremo, atmósfera ocre, plano general","categoria":"Naturaleza & Animales","estilo":"Clima extremo","iluminacion":"Atmósfera ocre","encuadre":"Plano general","formato":"21:9"},{"id":95,"nombre":"Glaciar con auroras","descripcion":"Nocturno polar, auroras verdes y púrpura, plano general","categoria":"Naturaleza & Animales","estilo":"Nocturno polar","iluminacion":"Auroras verdes y púrpura","encuadre":"Plano general","formato":"21:9"},{"id":96,"nombre":"Safari con lluvia","descripcion":"Documental, cielo nublado, plano general","categoria":"Naturaleza & Animales","estilo":"Documental","iluminacion":"Cielo nublado","encuadre":"Plano general","formato":"16:9"},{"id":97,"nombre":"Jardín zen minimalista","descripcion":"Paisaje minimal, luz suave, plano general","categoria":"Naturaleza & Animales","estilo":"Paisaje minimal","iluminacion":"Luz suave","encuadre":"Plano general","formato":"4:3"},{"id":98,"nombre":"Selva densa con niebla","descripcion":"Húmeda y densa, niebla y humedad, plano general","categoria":"Naturaleza & Animales","estilo":"Húmeda y densa","iluminacion":"Niebla y humedad","encuadre":"Plano general","formato":"16:9"},{"id":99,"nombre":"Campo de lavanda","descripcion":"Paisaje floral, luz cálida, plano general","categoria":"Naturaleza & Animales","estilo":"Paisaje floral","iluminacion":"Luz cálida","encuadre":"Plano general","formato":"16:9"},{"id":100,"nombre":"Atardecer en montaña nevada","descripcion":"Paisaje épico, contraste cálido/frío, plano general","categoria":"Naturaleza & Animales","estilo":"Paisaje épico","iluminacion":"Contraste cálido/frío","encuadre":"Plano general","formato":"16:9"},{"id":101,"nombre":"Propaganda retro","descripcion":"Gráfica de póster con tipografía contundente","categoria":"Retro","estilo":"Propaganda clásica","iluminacion":"Luz plana","encuadre":"Frontal","formato":"4:3 · 1600×1200"},{"id":102,"nombre":"Afrofuturismo","descripcion":"Fusión cultural y futurista vibrante","categoria":"Futurista","estilo":"Afrofuturista","iluminacion":"Neón cálido","encuadre":"Plano medio","formato":"16:9 · 1920×1080"},{"id":103,"nombre":"Nórdico rúnico","descripcion":"Motivos vikingos y texturas de madera/piedra","categoria":"Histórico","estilo":"Nórdico","iluminacion":"Luz fría","encuadre":"Plano general","formato":"3:2 · 3000×2000"},{"id":104,"nombre":"Persa ornamental","descripcion":"Patrones y dorados inspirados en miniaturas","categoria":"Cultural","estilo":"Persa","iluminacion":"Cálida suave","encuadre":"Plano detalle","formato":"1:1 · 1024×1024"},{"id":105,"nombre":"Arte huichol","descripcion":"Patrones multicolor en cuentas","categoria":"Cultural","estilo":"Huichol","iluminacion":"Luz neutra","encuadre":"Plano detalle","formato":"1:1 · 1024×1024"},{"id":106,"nombre":"Quilling de papel","descripcion":"Tiras de papel enrolladas formando figuras","categoria":"Material","estilo":"Quilling","iluminacion":"Luz difusa","encuadre":"Plano detalle","formato":"1:1 · 1024×1024"},{"id":107,"nombre":"Mosaico de vidrio","descripcion":"Teselas de vidrio traslúcidas","categoria":"Material","estilo":"Vitromosaico","iluminacion":"Luz puntual","encuadre":"Plano detalle","formato":"1:1 · 1024×1024"},{"id":108,"nombre":"Jardín zen lluvioso","descripcion":"Minimal japonés con lluvia fina","categoria":"Paisaje","estilo":"Zen lluvioso","iluminacion":"Luz gris suave","encuadre":"Plano general","formato":"4:3 · 1600×1200"},{"id":109,"nombre":"Monzón urbano","descripcion":"Ciudad bajo lluvia intensa y reflejos","categoria":"Urbano","estilo":"Monzón","iluminacion":"Neón húmedo","encuadre":"Gran angular","formato":"16:9 · 1920×1080"},{"id":110,"nombre":"Tormenta eléctrica","descripcion":"Rayos dramáticos y nubes densas","categoria":"Atmosférico","estilo":"Eléctrico","iluminacion":"Relámpagos","encuadre":"Plano general","formato":"21:9 · 3840×1646"},{"id":111,"nombre":"Eclipse total","descripcion":"Siluetas con contraluz extremo","categoria":"Atmosférico","estilo":"Eclipse","iluminacion":"Halo frío","encuadre":"Plano general","formato":"21:9 · 3840×1646"},{"id":112,"nombre":"Aurora boreal","descripcion":"Cielos verdes y violetas danzantes","categoria":"Atmosférico","estilo":"Aurora","iluminacion":"Luz polar","encuadre":"Plano general","formato":"21:9 · 3840×1646"},{"id":113,"nombre":"Desierto salino","descripcion":"Superficies blancas y horizonte plano","categoria":"Paisaje","estilo":"Salar","iluminacion":"Luz dura","encuadre":"Gran angular","formato":"16:9 · 1920×1080"},{"id":114,"nombre":"Selva nubosa","descripcion":"Niebla densa y vegetación húmeda","categoria":"Paisaje","estilo":"Nubosa","iluminacion":"Luz difusa","encuadre":"Plano general","formato":"16:9 · 1920×1080"},{"id":115,"nombre":"Glitch tipográfico","descripcion":"Tipos distorsionados con artefactos","categoria":"Digital","estilo":"Glitch type","iluminacion":"Neón frío","encuadre":"Frontal","formato":"1:1 · 1024×1024"},{"id":116,"nombre":"Holográfico perlado","descripcion":"Superficies iridiscentes","categoria":"Material","estilo":"Holográfico","iluminacion":"Punto especular","encuadre":"Macro","formato":"1:1 · 1024×1024"},{"id":117,"nombre":"Cromo líquido","descripcion":"Formas metálicas fluidas","categoria":"Material","estilo":"Metal líquido","iluminacion":"Luz dura","encuadre":"Macro","formato":"1:1 · 1024×1024"},{"id":118,"nombre":"Neón bicolor callejón","descripcion":"Calle estrecha con neón dual","categoria":"Urbano","estilo":"Neón bicolor","iluminacion":"Alto contraste","encuadre":"Gran angular","formato":"16:9 · 1920×1080"},{"id":119,"nombre":"Editorial monocromo","descripcion":"Moda en B/N con sombras largas","categoria":"Fotografía","estilo":"Editorial B/N","iluminacion":"Luz dura","encuadre":"Plano americano","formato":"3:2 · 3000×2000"},{"id":120,"nombre":"Retrato Rembrandt","descripcion":"Triángulo de luz clásico","categoria":"Fotografía","estilo":"Rembrandt","iluminacion":"Luz lateral","encuadre":"Primer plano","formato":"3:2 · 3000×2000"},{"id":121,"nombre":"Producto reflective","descripcion":"Objetos con reflejo controlado","categoria":"Producto","estilo":"Reflectivo","iluminacion":"Softbox + rim","encuadre":"Plano detalle","formato":"4:3 · 1600×1200"},{"id":122,"nombre":"Tech blueprint","descripcion":"Esquemas y líneas técnicas","categoria":"Conceptual","estilo":"Blueprint","iluminacion":"Luz plana","encuadre":"Frontal","formato":"4:3 · 1600×1200"},{"id":123,"nombre":"Data‑viz artístico","descripcion":"Gráficos estilizados con estética de datos","categoria":"Conceptual","estilo":"Dataviz","iluminacion":"Luz neutra","encuadre":"Frontal","formato":"16:9 · 1920×1080"},{"id":124,"nombre":"Mapamundi vintage","descripcion":"Cartografía envejecida","categoria":"Retro","estilo":"Cartografía","iluminacion":"Luz cálida","encuadre":"Frontal","formato":"4:3 · 1600×1200"},{"id":125,"nombre":"Isométrico ciudad low‑poly","descripcion":"Mini ciudad geométrica","categoria":"3D","estilo":"Low‑poly urbano","iluminacion":"Luz neutra","encuadre":"Isométrica","formato":"1:1 · 1024×1024"},{"id":126,"nombre":"Diorama de mesa","descripcion":"Escena mini en tablero","categoria":"Maqueta","estilo":"Diorama","iluminacion":"Luz natural","encuadre":"Plano general","formato":"4:3 · 1600×1200"},{"id":127,"nombre":"Collage textil","descripcion":"Retales y costuras visibles","categoria":"Material","estilo":"Textil collage","iluminacion":"Luz suave","encuadre":"Frontal","formato":"1:1 · 1024×1024"},{"id":128,"nombre":"Arcilla esmaltada","descripcion":"Piezas cerámicas brillantes","categoria":"Material","estilo":"Arcilla esmaltada","iluminacion":"Punto caliente","encuadre":"Macro","formato":"1:1 · 1024×1024"},{"id":129,"nombre":"Papel arrugado","descripcion":"Textura crujiente y sombras suaves","categoria":"Material","estilo":"Kraft","iluminacion":"Luz lateral","encuadre":"Plano detalle","formato":"1:1 · 1024×1024"},{"id":130,"nombre":"Cómic duotono","descripcion":"Dos tintas y trama","categoria":"Ilustración","estilo":"Duotono","iluminacion":"Luz plana","encuadre":"Frontal","formato":"3:2 · 3000×2000"},{"id":131,"nombre":"Línea continua","descripcion":"Dibujo de una sola línea","categoria":"Ilustración","estilo":"One‑line","iluminacion":"Luz neutra","encuadre":"Frontal","formato":"4:3 · 1600×1200"},{"id":132,"nombre":"Infografía retro","descripcion":"Iconografía y paleta setentera","categoria":"Retro","estilo":"Infografía 70s","iluminacion":"Luz plana","encuadre":"Frontal","formato":"4:3 · 1600×1200"},{"id":133,"nombre":"Publicidad 90s","descripcion":"Gradientes y efecto gel noventero","categoria":"Retro","estilo":"Ad 90s","iluminacion":"Luz brillante","encuadre":"Plano medio","formato":"4:3 · 1600×1200"},{"id":134,"nombre":"Épico deportivo nocturno","descripcion":"Estadio con focos y neblina","categoria":"Temático","estilo":"Épico deportivo","iluminacion":"Luz de estadio","encuadre":"Plano general","formato":"16:9 · 1920×1080"},{"id":135,"nombre":"Ángel etéreo","descripcion":"Nubes y resplandores suaves","categoria":"Fantasía","estilo":"Angelical","iluminacion":"Luz blanca","encuadre":"Plano general","formato":"3:2 · 3000×2000"},{"id":136,"nombre":"Infierno volcánico","descripcion":"Lava y humo denso","categoria":"Fantasía","estilo":"Infernal","iluminacion":"Rojo incandescente","encuadre":"Gran angular","formato":"21:9 · 3840×1646"},{"id":137,"nombre":"Infantil crayón 3 años","descripcion":"Trazos gruesos y colores planos","categoria":"Estilizado","estilo":"Crayón 3","iluminacion":"Luz neutra","encuadre":"Frontal","formato":"1:1 · 1024×1024"},{"id":138,"nombre":"Infantil rotulador 10 años","descripcion":"Trazos definidos y sombreados simples","categoria":"Estilizado","estilo":"Rotulador 10","iluminacion":"Luz neutra","encuadre":"Frontal","formato":"1:1 · 1024×1024"},{"id":139,"nombre":"Western polvoriento","descripcion":"Sol bajo y polvo en suspensión","categoria":"Temático","estilo":"Western","iluminacion":"Atardecer cálido","encuadre":"Plano general","formato":"21:9 · 3840×1646"},{"id":140,"nombre":"Hippie psicodélico","descripcion":"Espirales y flores saturadas","categoria":"Retro","estilo":"Psicodélico","iluminacion":"Luz intensa","encuadre":"Plano general","formato":"4:3 · 1600×1200"},{"id":141,"nombre":"3D: acuarela suave dramático","descripcion":"Acuarela suave, sombras duras, retrato 3/4","categoria":"3D","estilo":"Acuarela suave","iluminacion":"Sombras duras","encuadre":"Retrato 3/4","formato":"4:3 · 2560×1920"},{"id":142,"nombre":"3D: cómic sombreado intenso","descripcion":"Cómic sombreado, sombras duras, plano general","categoria":"3D","estilo":"Cómic sombreado","iluminacion":"Sombras duras","encuadre":"Plano general","formato":"1:1 · 2560×1920"},{"id":143,"nombre":"3D: ilustración digital cinemático","descripcion":"Ilustración digital, golden hour, plano americano","categoria":"3D","estilo":"Ilustración digital","iluminacion":"Golden hour","encuadre":"Plano americano","formato":"4:3 · 3840×2160"},{"id":144,"nombre":"3D: realismo fotográfico minimal","descripcion":"Realismo fotográfico, sombras duras, plano general","categoria":"3D","estilo":"Realismo fotográfico","iluminacion":"Sombras duras","encuadre":"Plano general","formato":"1:1 · 2048×2048"},{"id":145,"nombre":"3D: óleo clásico intenso","descripcion":"Óleo clásico, luz suave difusa, panorámica","categoria":"3D","estilo":"Óleo clásico","iluminacion":"Luz suave difusa","encuadre":"Panorámica","formato":"16:9 · 2048×2048"},{"id":146,"nombre":"3D: óleo clásico minimal","descripcion":"Óleo clásico, luz suave difusa, vista cenital","categoria":"3D","estilo":"Óleo clásico","iluminacion":"Luz suave difusa","encuadre":"Vista cenital","formato":"4:3 · 1920×1080"},{"id":147,"nombre":"3D: óleo clásico minimal","descripcion":"Óleo clásico, luz de estudio, plano medio","categoria":"3D","estilo":"Óleo clásico","iluminacion":"Luz de estudio","encuadre":"Plano medio","formato":"4:3 · 1920×1080"},{"id":148,"nombre":"Atmosférico: concept art sereno","descripcion":"Concept art, luz de estudio, plano americano","categoria":"Atmosférico","estilo":"Concept art","iluminacion":"Luz de estudio","encuadre":"Plano americano","formato":"1:1 · 2048×1365"},{"id":149,"nombre":"Atmosférico: realismo fotográfico sereno","descripcion":"Realismo fotográfico, golden hour, panorámica","categoria":"Atmosférico","estilo":"Realismo fotográfico","iluminacion":"Golden hour","encuadre":"Panorámica","formato":"21:9 · 1920×1080"},{"id":150,"nombre":"Atmosférico: acuarela suave rápido","descripcion":"Acuarela suave, luz suave difusa, primerísimo primer plano","categoria":"Atmosférico","estilo":"Acuarela suave","iluminacion":"Luz suave difusa","encuadre":"Primerísimo primer plano","formato":"4:3 · 1920×1080"},{"id":151,"nombre":"Atmosférico: low poly orgánico","descripcion":"Low poly, golden hour, plano medio","categoria":"Atmosférico","estilo":"Low poly","iluminacion":"Golden hour","encuadre":"Plano medio","formato":"3:2 · 2048×1365"},{"id":152,"nombre":"Atmosférico: pixel art cinemático","descripcion":"Pixel art, luz de estudio, plano americano","categoria":"Atmosférico","estilo":"Pixel art","iluminacion":"Luz de estudio","encuadre":"Plano americano","formato":"4:3 · 3840×2160"},{"id":153,"nombre":"Conceptual: concept art orgánico","descripcion":"Concept art, neón cian/magenta, primerísimo primer plano","categoria":"Conceptual","estilo":"Concept art","iluminacion":"Neón cian/magenta","encuadre":"Primerísimo primer plano","formato":"16:9 · 2560×1920"},{"id":154,"nombre":"Conceptual: low poly cinemático","descripcion":"Low poly, golden hour, primerísimo primer plano","categoria":"Conceptual","estilo":"Low poly","iluminacion":"Golden hour","encuadre":"Primerísimo primer plano","formato":"3:2 · 1920×1080"},{"id":155,"nombre":"Conceptual: cómic sombreado cinemático","descripcion":"Cómic sombreado, sombras duras, panorámica","categoria":"Conceptual","estilo":"Cómic sombreado","iluminacion":"Sombras duras","encuadre":"Panorámica","formato":"3:2 · 2560×1920"},{"id":156,"nombre":"Conceptual: realismo fotográfico cinemático","descripcion":"Realismo fotográfico, sombras duras, primerísimo primer plano","categoria":"Conceptual","estilo":"Realismo fotográfico","iluminacion":"Sombras duras","encuadre":"Primerísimo primer plano","formato":"21:9 · 2048×2048"},{"id":157,"nombre":"Conceptual: concept art cinemático","descripcion":"Concept art, neón cian/magenta, plano general","categoria":"Conceptual","estilo":"Concept art","iluminacion":"Neón cian/magenta","encuadre":"Plano general","formato":"1:1 · 2048×2048"},{"id":158,"nombre":"Conceptual: pixel art minimal","descripcion":"Pixel art, neón cian/magenta, primerísimo primer plano","categoria":"Conceptual","estilo":"Pixel art","iluminacion":"Neón cian/magenta","encuadre":"Primerísimo primer plano","formato":"1:1 · 2048×2048"},{"id":159,"nombre":"Cultural: acuarela suave intenso","descripcion":"Acuarela suave, luz suave difusa, retrato 3/4","categoria":"Cultural","estilo":"Acuarela suave","iluminacion":"Luz suave difusa","encuadre":"Retrato 3/4","formato":"4:3 · 3840×2160"},{"id":160,"nombre":"Cultural: acuarela suave minimal","descripcion":"Acuarela suave, sombras duras, plano medio","categoria":"Cultural","estilo":"Acuarela suave","iluminacion":"Sombras duras","encuadre":"Plano medio","formato":"1:1 · 2560×1920"},{"id":161,"nombre":"Cultural: cómic sombreado rápido","descripcion":"Cómic sombreado, luz de estudio, vista cenital","categoria":"Cultural","estilo":"Cómic sombreado","iluminacion":"Luz de estudio","encuadre":"Vista cenital","formato":"21:9 · 1920×1080"},{"id":162,"nombre":"Cultural: óleo clásico sereno","descripcion":"Óleo clásico, neón cian/magenta, primerísimo primer plano","categoria":"Cultural","estilo":"Óleo clásico","iluminacion":"Neón cian/magenta","encuadre":"Primerísimo primer plano","formato":"4:3 · 3840×2160"},{"id":163,"nombre":"Cultural: ilustración digital sereno","descripcion":"Ilustración digital, contraluz dramático, panorámica","categoria":"Cultural","estilo":"Ilustración digital","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"3:2 · 2048×1365"},{"id":164,"nombre":"Cultural: ilustración digital orgánico","descripcion":"Ilustración digital, sombras duras, panorámica","categoria":"Cultural","estilo":"Ilustración digital","iluminacion":"Sombras duras","encuadre":"Panorámica","formato":"16:9 · 3840×2160"},{"id":165,"nombre":"Digital: cómic sombreado rápido","descripcion":"Cómic sombreado, luz suave difusa, panorámica","categoria":"Digital","estilo":"Cómic sombreado","iluminacion":"Luz suave difusa","encuadre":"Panorámica","formato":"3:2 · 2560×1920"},{"id":166,"nombre":"Digital: ilustración digital etéreo","descripcion":"Ilustración digital, contraluz dramático, plano americano","categoria":"Digital","estilo":"Ilustración digital","iluminacion":"Contraluz dramático","encuadre":"Plano americano","formato":"16:9 · 1920×1080"},{"id":167,"nombre":"Digital: óleo clásico sereno","descripcion":"Óleo clásico, sombras duras, primerísimo primer plano","categoria":"Digital","estilo":"Óleo clásico","iluminacion":"Sombras duras","encuadre":"Primerísimo primer plano","formato":"4:3 · 2048×2048"},{"id":168,"nombre":"Digital: pixel art cinemático","descripcion":"Pixel art, golden hour, primerísimo primer plano","categoria":"Digital","estilo":"Pixel art","iluminacion":"Golden hour","encuadre":"Primerísimo primer plano","formato":"16:9 · 1920×1080"},{"id":169,"nombre":"Digital: concept art dramático","descripcion":"Concept art, luz de estudio, plano medio","categoria":"Digital","estilo":"Concept art","iluminacion":"Luz de estudio","encuadre":"Plano medio","formato":"4:3 · 3840×2160"},{"id":170,"nombre":"Digital: cómic sombreado cinemático","descripcion":"Cómic sombreado, luz suave difusa, plano medio","categoria":"Digital","estilo":"Cómic sombreado","iluminacion":"Luz suave difusa","encuadre":"Plano medio","formato":"1:1 · 2560×1920"},{"id":171,"nombre":"Digital: concept art etéreo","descripcion":"Concept art, contraluz dramático, panorámica","categoria":"Digital","estilo":"Concept art","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"16:9 · 3840×2160"},{"id":172,"nombre":"Estilizado: acuarela suave dramático","descripcion":"Acuarela suave, golden hour, primerísimo primer plano","categoria":"Estilizado","estilo":"Acuarela suave","iluminacion":"Golden hour","encuadre":"Primerísimo primer plano","formato":"3:2 · 2560×1920"},{"id":173,"nombre":"Estilizado: acuarela suave minimal","descripcion":"Acuarela suave, neón cian/magenta, plano general","categoria":"Estilizado","estilo":"Acuarela suave","iluminacion":"Neón cian/magenta","encuadre":"Plano general","formato":"1:1 · 2560×1920"},{"id":174,"nombre":"Estilizado: óleo clásico dramático","descripcion":"Óleo clásico, luz suave difusa, primerísimo primer plano","categoria":"Estilizado","estilo":"Óleo clásico","iluminacion":"Luz suave difusa","encuadre":"Primerísimo primer plano","formato":"16:9 · 1920×1080"},{"id":175,"nombre":"Estilizado: cómic sombreado intenso","descripcion":"Cómic sombreado, contraluz dramático, plano medio","categoria":"Estilizado","estilo":"Cómic sombreado","iluminacion":"Contraluz dramático","encuadre":"Plano medio","formato":"4:3 · 2048×1365"},{"id":176,"nombre":"Estilizado: realismo fotográfico intenso","descripcion":"Realismo fotográfico, neón cian/magenta, plano americano","categoria":"Estilizado","estilo":"Realismo fotográfico","iluminacion":"Neón cian/magenta","encuadre":"Plano americano","formato":"21:9 · 2560×1920"},{"id":177,"nombre":"Estilizado: concept art dramático","descripcion":"Concept art, contraluz dramático, panorámica","categoria":"Estilizado","estilo":"Concept art","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"16:9 · 2048×2048"},{"id":178,"nombre":"Fantasía: low poly etéreo","descripcion":"Low poly, luz suave difusa, plano medio","categoria":"Fantasía","estilo":"Low poly","iluminacion":"Luz suave difusa","encuadre":"Plano medio","formato":"16:9 · 1920×1080"},{"id":179,"nombre":"Fantasía: low poly etéreo","descripcion":"Low poly, golden hour, retrato 3/4","categoria":"Fantasía","estilo":"Low poly","iluminacion":"Golden hour","encuadre":"Retrato 3/4","formato":"1:1 · 1920×1080"},{"id":180,"nombre":"Fantasía: acuarela suave sereno","descripcion":"Acuarela suave, luz de estudio, retrato 3/4","categoria":"Fantasía","estilo":"Acuarela suave","iluminacion":"Luz de estudio","encuadre":"Retrato 3/4","formato":"1:1 · 3840×2160"},{"id":181,"nombre":"Fantasía: pixel art intenso","descripcion":"Pixel art, contraluz dramático, panorámica","categoria":"Fantasía","estilo":"Pixel art","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"3:2 · 2560×1920"},{"id":182,"nombre":"Fantasía: concept art etéreo","descripcion":"Concept art, sombras duras, plano americano","categoria":"Fantasía","estilo":"Concept art","iluminacion":"Sombras duras","encuadre":"Plano americano","formato":"4:3 · 2560×1920"},{"id":183,"nombre":"Fantasía: low poly minimal","descripcion":"Low poly, neón cian/magenta, plano americano","categoria":"Fantasía","estilo":"Low poly","iluminacion":"Neón cian/magenta","encuadre":"Plano americano","formato":"1:1 · 1920×1080"},{"id":184,"nombre":"Fotografía: pixel art sereno","descripcion":"Pixel art, contraluz dramático, plano medio","categoria":"Fotografía","estilo":"Pixel art","iluminacion":"Contraluz dramático","encuadre":"Plano medio","formato":"3:2 · 1920×1080"},{"id":185,"nombre":"Fotografía: acuarela suave dramático","descripcion":"Acuarela suave, contraluz dramático, plano americano","categoria":"Fotografía","estilo":"Acuarela suave","iluminacion":"Contraluz dramático","encuadre":"Plano americano","formato":"4:3 · 2560×1920"},{"id":186,"nombre":"Fotografía: low poly dramático","descripcion":"Low poly, contraluz dramático, panorámica","categoria":"Fotografía","estilo":"Low poly","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"3:2 · 1920×1080"},{"id":187,"nombre":"Fotografía: low poly orgánico","descripcion":"Low poly, contraluz dramático, plano general","categoria":"Fotografía","estilo":"Low poly","iluminacion":"Contraluz dramático","encuadre":"Plano general","formato":"21:9 · 1920×1080"},{"id":188,"nombre":"Fotografía: ilustración digital rápido","descripcion":"Ilustración digital, luz de estudio, plano general","categoria":"Fotografía","estilo":"Ilustración digital","iluminacion":"Luz de estudio","encuadre":"Plano general","formato":"1:1 · 2560×1920"},{"id":189,"nombre":"Fotografía: ilustración digital intenso","descripcion":"Ilustración digital, neón cian/magenta, plano americano","categoria":"Fotografía","estilo":"Ilustración digital","iluminacion":"Neón cian/magenta","encuadre":"Plano americano","formato":"3:2 · 3840×2160"},{"id":190,"nombre":"Futurista: acuarela suave cinemático","descripcion":"Acuarela suave, luz de estudio, plano general","categoria":"Futurista","estilo":"Acuarela suave","iluminacion":"Luz de estudio","encuadre":"Plano general","formato":"1:1 · 2048×2048"},{"id":191,"nombre":"Futurista: óleo clásico dramático","descripcion":"Óleo clásico, neón cian/magenta, plano medio","categoria":"Futurista","estilo":"Óleo clásico","iluminacion":"Neón cian/magenta","encuadre":"Plano medio","formato":"16:9 · 2048×2048"},{"id":192,"nombre":"Futurista: pixel art intenso","descripcion":"Pixel art, golden hour, panorámica","categoria":"Futurista","estilo":"Pixel art","iluminacion":"Golden hour","encuadre":"Panorámica","formato":"16:9 · 2048×2048"},{"id":193,"nombre":"Futurista: óleo clásico intenso","descripcion":"Óleo clásico, golden hour, plano americano","categoria":"Futurista","estilo":"Óleo clásico","iluminacion":"Golden hour","encuadre":"Plano americano","formato":"16:9 · 2048×1365"},{"id":194,"nombre":"Futurista: low poly etéreo","descripcion":"Low poly, luz de estudio, plano medio","categoria":"Futurista","estilo":"Low poly","iluminacion":"Luz de estudio","encuadre":"Plano medio","formato":"4:3 · 1920×1080"},{"id":195,"nombre":"Futurista: realismo fotográfico intenso","descripcion":"Realismo fotográfico, neón cian/magenta, plano medio","categoria":"Futurista","estilo":"Realismo fotográfico","iluminacion":"Neón cian/magenta","encuadre":"Plano medio","formato":"3:2 · 3840×2160"},{"id":196,"nombre":"Futurista: cómic sombreado intenso","descripcion":"Cómic sombreado, sombras duras, plano medio","categoria":"Futurista","estilo":"Cómic sombreado","iluminacion":"Sombras duras","encuadre":"Plano medio","formato":"4:3 · 1920×1080"},{"id":197,"nombre":"Histórico: ilustración digital rápido","descripcion":"Ilustración digital, contraluz dramático, panorámica","categoria":"Histórico","estilo":"Ilustración digital","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"21:9 · 2048×1365"},{"id":198,"nombre":"Histórico: concept art minimal","descripcion":"Concept art, luz suave difusa, panorámica","categoria":"Histórico","estilo":"Concept art","iluminacion":"Luz suave difusa","encuadre":"Panorámica","formato":"1:1 · 3840×2160"},{"id":199,"nombre":"Histórico: cómic sombreado intenso","descripcion":"Cómic sombreado, luz suave difusa, plano americano","categoria":"Histórico","estilo":"Cómic sombreado","iluminacion":"Luz suave difusa","encuadre":"Plano americano","formato":"21:9 · 2048×2048"},{"id":200,"nombre":"Histórico: cómic sombreado cinemático","descripcion":"Cómic sombreado, contraluz dramático, primerísimo primer plano","categoria":"Histórico","estilo":"Cómic sombreado","iluminacion":"Contraluz dramático","encuadre":"Primerísimo primer plano","formato":"21:9 · 1920×1080"},{"id":201,"nombre":"Histórico: ilustración digital minimal","descripcion":"Ilustración digital, golden hour, plano americano","categoria":"Histórico","estilo":"Ilustración digital","iluminacion":"Golden hour","encuadre":"Plano americano","formato":"4:3 · 1920×1080"},{"id":202,"nombre":"Histórico: low poly dramático","descripcion":"Low poly, luz de estudio, plano medio","categoria":"Histórico","estilo":"Low poly","iluminacion":"Luz de estudio","encuadre":"Plano medio","formato":"3:2 · 2560×1920"},{"id":203,"nombre":"Histórico: concept art minimal","descripcion":"Concept art, contraluz dramático, vista cenital","categoria":"Histórico","estilo":"Concept art","iluminacion":"Contraluz dramático","encuadre":"Vista cenital","formato":"3:2 · 2560×1920"},{"id":204,"nombre":"Ilustración: cómic sombreado minimal","descripcion":"Cómic sombreado, golden hour, panorámica","categoria":"Ilustración","estilo":"Cómic sombreado","iluminacion":"Golden hour","encuadre":"Panorámica","formato":"4:3 · 2048×2048"},{"id":205,"nombre":"Ilustración: realismo fotográfico orgánico","descripcion":"Realismo fotográfico, golden hour, retrato 3/4","categoria":"Ilustración","estilo":"Realismo fotográfico","iluminacion":"Golden hour","encuadre":"Retrato 3/4","formato":"21:9 · 1920×1080"},{"id":206,"nombre":"Ilustración: cómic sombreado dramático","descripcion":"Cómic sombreado, contraluz dramático, panorámica","categoria":"Ilustración","estilo":"Cómic sombreado","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"3:2 · 2560×1920"},{"id":207,"nombre":"Ilustración: low poly dramático","descripcion":"Low poly, contraluz dramático, retrato 3/4","categoria":"Ilustración","estilo":"Low poly","iluminacion":"Contraluz dramático","encuadre":"Retrato 3/4","formato":"4:3 · 3840×2160"},{"id":208,"nombre":"Ilustración: low poly rápido","descripcion":"Low poly, luz de estudio, retrato 3/4","categoria":"Ilustración","estilo":"Low poly","iluminacion":"Luz de estudio","encuadre":"Retrato 3/4","formato":"1:1 · 1920×1080"},{"id":209,"nombre":"Ilustración: óleo clásico minimal","descripcion":"Óleo clásico, contraluz dramático, plano medio","categoria":"Ilustración","estilo":"Óleo clásico","iluminacion":"Contraluz dramático","encuadre":"Plano medio","formato":"21:9 · 2048×2048"},{"id":210,"nombre":"Maqueta: pixel art dramático","descripcion":"Pixel art, sombras duras, plano medio","categoria":"Maqueta","estilo":"Pixel art","iluminacion":"Sombras duras","encuadre":"Plano medio","formato":"3:2 · 2048×2048"},{"id":211,"nombre":"Maqueta: ilustración digital dramático","descripcion":"Ilustración digital, luz suave difusa, plano general","categoria":"Maqueta","estilo":"Ilustración digital","iluminacion":"Luz suave difusa","encuadre":"Plano general","formato":"16:9 · 1920×1080"},{"id":212,"nombre":"Maqueta: acuarela suave sereno","descripcion":"Acuarela suave, luz de estudio, vista cenital","categoria":"Maqueta","estilo":"Acuarela suave","iluminacion":"Luz de estudio","encuadre":"Vista cenital","formato":"1:1 · 3840×2160"},{"id":213,"nombre":"Maqueta: pixel art orgánico","descripcion":"Pixel art, luz de estudio, retrato 3/4","categoria":"Maqueta","estilo":"Pixel art","iluminacion":"Luz de estudio","encuadre":"Retrato 3/4","formato":"16:9 · 3840×2160"},{"id":214,"nombre":"Maqueta: low poly rápido","descripcion":"Low poly, luz suave difusa, panorámica","categoria":"Maqueta","estilo":"Low poly","iluminacion":"Luz suave difusa","encuadre":"Panorámica","formato":"21:9 · 2048×2048"},{"id":215,"nombre":"Maqueta: pixel art cinemático","descripcion":"Pixel art, luz suave difusa, retrato 3/4","categoria":"Maqueta","estilo":"Pixel art","iluminacion":"Luz suave difusa","encuadre":"Retrato 3/4","formato":"3:2 · 2048×1365"},{"id":216,"nombre":"Maqueta: concept art dramático","descripcion":"Concept art, sombras duras, plano medio","categoria":"Maqueta","estilo":"Concept art","iluminacion":"Sombras duras","encuadre":"Plano medio","formato":"4:3 · 2048×1365"},{"id":217,"nombre":"Material: óleo clásico minimal","descripcion":"Óleo clásico, luz de estudio, retrato 3/4","categoria":"Material","estilo":"Óleo clásico","iluminacion":"Luz de estudio","encuadre":"Retrato 3/4","formato":"3:2 · 1920×1080"},{"id":218,"nombre":"Paisaje: óleo clásico etéreo","descripcion":"Óleo clásico, contraluz dramático, primerísimo primer plano","categoria":"Paisaje","estilo":"Óleo clásico","iluminacion":"Contraluz dramático","encuadre":"Primerísimo primer plano","formato":"16:9 · 2048×1365"},{"id":219,"nombre":"Paisaje: low poly minimal","descripcion":"Low poly, neón cian/magenta, plano americano","categoria":"Paisaje","estilo":"Low poly","iluminacion":"Neón cian/magenta","encuadre":"Plano americano","formato":"16:9 · 3840×2160"},{"id":220,"nombre":"Paisaje: concept art rápido","descripcion":"Concept art, neón cian/magenta, plano medio","categoria":"Paisaje","estilo":"Concept art","iluminacion":"Neón cian/magenta","encuadre":"Plano medio","formato":"21:9 · 3840×2160"},{"id":221,"nombre":"Paisaje: ilustración digital intenso","descripcion":"Ilustración digital, contraluz dramático, panorámica","categoria":"Paisaje","estilo":"Ilustración digital","iluminacion":"Contraluz dramático","encuadre":"Panorámica","formato":"4:3 · 2048×1365"},{"id":222,"nombre":"Paisaje: óleo clásico orgánico","descripcion":"Óleo clásico, contraluz dramático, primerísimo primer plano","categoria":"Paisaje","estilo":"Óleo clásico","iluminacion":"Contraluz dramático","encuadre":"Primerísimo primer plano","formato":"16:9 · 2048×2048"},{"id":223,"nombre":"Producto: acuarela suave sereno","descripcion":"Acuarela suave, luz de estudio, vista cenital","categoria":"Producto","estilo":"Acuarela suave","iluminacion":"Luz de estudio","encuadre":"Vista cenital","formato":"16:9 · 3840×2160"},{"id":224,"nombre":"Producto: realismo fotográfico intenso","descripcion":"Realismo fotográfico, neón cian/magenta, plano general","categoria":"Producto","estilo":"Realismo fotográfico","iluminacion":"Neón cian/magenta","encuadre":"Plano general","formato":"1:1 · 2048×2048"},{"id":225,"nombre":"Producto: cómic sombreado sereno","descripcion":"Cómic sombreado, neón cian/magenta, plano medio","categoria":"Producto","estilo":"Cómic sombreado","iluminacion":"Neón cian/magenta","encuadre":"Plano medio","formato":"3:2 · 3840×2160"},{"id":226,"nombre":"Producto: cómic sombreado intenso","descripcion":"Cómic sombreado, neón cian/magenta, retrato 3/4","categoria":"Producto","estilo":"Cómic sombreado","iluminacion":"Neón cian/magenta","encuadre":"Retrato 3/4","formato":"16:9 · 1920×1080"},{"id":227,"nombre":"Producto: concept art cinemático","descripcion":"Concept art, luz suave difusa, vista cenital","categoria":"Producto","estilo":"Concept art","iluminacion":"Luz suave difusa","encuadre":"Vista cenital","formato":"21:9 · 2048×1365"},{"id":228,"nombre":"Producto: low poly sereno","descripcion":"Low poly, neón cian/magenta, plano americano","categoria":"Producto","estilo":"Low poly","iluminacion":"Neón cian/magenta","encuadre":"Plano americano","formato":"4:3 · 2560×1920"},{"id":229,"nombre":"Producto: óleo clásico orgánico","descripcion":"Óleo clásico, neón cian/magenta, panorámica","categoria":"Producto","estilo":"Óleo clásico","iluminacion":"Neón cian/magenta","encuadre":"Panorámica","formato":"21:9 · 3840×2160"},{"id":230,"nombre":"Retro: low poly dramático","descripcion":"Low poly, contraluz dramático, vista cenital","categoria":"Retro","estilo":"Low poly","iluminacion":"Contraluz dramático","encuadre":"Vista cenital","formato":"4:3 · 1920×1080"},{"id":231,"nombre":"Retro: cómic sombreado intenso","descripcion":"Cómic sombreado, golden hour, plano americano","categoria":"Retro","estilo":"Cómic sombreado","iluminacion":"Golden hour","encuadre":"Plano americano","formato":"4:3 · 3840×2160"},{"id":232,"nombre":"Retro: ilustración digital etéreo","descripcion":"Ilustración digital, golden hour, plano medio","categoria":"Retro","estilo":"Ilustración digital","iluminacion":"Golden hour","encuadre":"Plano medio","formato":"4:3 · 2048×2048"},{"id":233,"nombre":"Temático: acuarela suave orgánico","descripcion":"Acuarela suave, sombras duras, plano medio","categoria":"Temático","estilo":"Acuarela suave","iluminacion":"Sombras duras","encuadre":"Plano medio","formato":"21:9 · 1920×1080"},{"id":234,"nombre":"Temático: óleo clásico etéreo","descripcion":"Óleo clásico, contraluz dramático, plano general","categoria":"Temático","estilo":"Óleo clásico","iluminacion":"Contraluz dramático","encuadre":"Plano general","formato":"21:9 · 1920×1080"},{"id":235,"nombre":"Temático: acuarela suave intenso","descripcion":"Acuarela suave, sombras duras, plano general","categoria":"Temático","estilo":"Acuarela suave","iluminacion":"Sombras duras","encuadre":"Plano general","formato":"21:9 · 3840×2160"},{"id":236,"nombre":"Temático: concept art rápido","descripcion":"Concept art, luz de estudio, panorámica","categoria":"Temático","estilo":"Concept art","iluminacion":"Luz de estudio","encuadre":"Panorámica","formato":"3:2 · 2048×1365"},{"id":237,"nombre":"Temático: low poly dramático","descripcion":"Low poly, luz de estudio, panorámica","categoria":"Temático","estilo":"Low poly","iluminacion":"Luz de estudio","encuadre":"Panorámica","formato":"4:3 · 2560×1920"},{"id":238,"nombre":"Temático: low poly dramático","descripcion":"Low poly, golden hour, primerísimo primer plano","categoria":"Temático","estilo":"Low poly","iluminacion":"Golden hour","encuadre":"Primerísimo primer plano","formato":"16:9 · 2560×1920"},{"id":239,"nombre":"Urbano: cómic sombreado cinemático","descripcion":"Cómic sombreado, luz suave difusa, plano medio","categoria":"Urbano","estilo":"Cómic sombreado","iluminacion":"Luz suave difusa","encuadre":"Plano medio","formato":"3:2 · 2048×1365"},{"id":240,"nombre":"Urbano: cómic sombreado minimal","descripcion":"Cómic sombreado, luz suave difusa, plano general","categoria":"Urbano","estilo":"Cómic sombreado","iluminacion":"Luz suave difusa","encuadre":"Plano general","formato":"16:9 · 2560×1920"},{"id":241,"nombre":"Urbano: concept art dramático","descripcion":"Concept art, contraluz dramático, plano medio","categoria":"Urbano","estilo":"Concept art","iluminacion":"Contraluz dramático","encuadre":"Plano medio","formato":"21:9 · 2048×2048"},{"id":242,"nombre":"Urbano: pixel art cinemático","descripcion":"Pixel art, neón cian/magenta, panorámica","categoria":"Urbano","estilo":"Pixel art","iluminacion":"Neón cian/magenta","encuadre":"Panorámica","formato":"3:2 · 1920×1080"},{"id":243,"nombre":"Urbano: realismo fotográfico sereno","descripcion":"Realismo fotográfico, golden hour, vista cenital","categoria":"Urbano","estilo":"Realismo fotográfico","iluminacion":"Golden hour","encuadre":"Vista cenital","formato":"3:2 · 2048×2048"},{"id":244,"nombre":"Urbano: pixel art sereno","descripcion":"Pixel art, luz suave difusa, primerísimo primer plano","categoria":"Urbano","estilo":"Pixel art","iluminacion":"Luz suave difusa","encuadre":"Primerísimo primer plano","formato":"3:2 · 3840×2160"}],"video_presets":[{"id":1,"nombre":"Callejón futurista lluvioso","descripcion":"Neo‑noir futurista, neón bicolor, cámara a pie","categoria":"Futuristas & Sci‑Fi","estilo":"Neo‑noir futurista","iluminacion":"Neón bicolor","encuadre":"Cámara a pie","formato":"16:9 · 24fps · 10s"},{"id":2,"nombre":"Toma aérea ciudad nocturna","descripcion":"Toma aérea, hora azul, plano general (dron)","categoria":"Cinematográficos","estilo":"Toma aérea","iluminacion":"Hora azul","encuadre":"Plano general (dron)","formato":"16:9 · 24fps · 10s"},{"id":3,"nombre":"Acción cámara en mano","descripcion":"Cámara en mano, natural, plano cercano","categoria":"Cinematográficos","estilo":"Cámara en mano","iluminacion":"Natural","encuadre":"Plano cercano","formato":"16:9 · 30fps · 8s"},{"id":4,"nombre":"Combate shōnen dinámico","descripcion":"Acción anime, energía brillante, travelling lateral","categoria":"Cinematográficos","estilo":"Acción anime","iluminacion":"Energía brillante","encuadre":"Travelling lateral","formato":"16:9 · 24fps · 12s"},{"id":5,"nombre":"Escena íntima campestre","descripcion":"Cinematográfico moderno, luz de amanecer, grúa descendente","categoria":"Cinematográficos","estilo":"Cinematográfico moderno","iluminacion":"Luz de amanecer","encuadre":"Grúa descendente","formato":"16:9 · 24fps · 12s"},{"id":6,"nombre":"Gag cartoon urbano","descripcion":"Cartoon, uniforme, paneo lento","categoria":"Animación 2D & 3D","estilo":"Cartoon","iluminacion":"Uniforme","encuadre":"Paneo lento","formato":"1:1 · 24fps · 8s"},{"id":7,"nombre":"Documental de sabana","descripcion":"Documental naturalista, luz cálida, teleobjetivo comprimido","categoria":"Naturaleza & Documental","estilo":"Documental naturalista","iluminacion":"Luz cálida","encuadre":"Teleobjetivo comprimido","formato":"16:9 · 24fps · 12s"},{"id":8,"nombre":"Exploración ártica","descripcion":"Exploración, monocromo azul, plano general (dron)","categoria":"Naturaleza & Documental","estilo":"Exploración","iluminacion":"Monocromo azul","encuadre":"Plano general (dron)","formato":"21:9 · 24fps · 10s"},{"id":9,"nombre":"Videoclip retro 80s","descripcion":"Retro neón, neón saturado, paneos y zooms suaves","categoria":"Estilos visuales","estilo":"Retro neón","iluminacion":"Neón saturado","encuadre":"Paneos y zooms suaves","formato":"16:9 · 24fps · 12s"},{"id":10,"nombre":"Stop‑motion artesanal","descripcion":"Stop‑motion, suave de estudio, movimientos mínimos","categoria":"Animación 2D & 3D","estilo":"Stop‑motion","iluminacion":"Suave de estudio","encuadre":"Movimientos mínimos","formato":"4:3 · 12fps · 10s"},{"id":11,"nombre":"Vlog mercado nocturno","descripcion":"Vlog urbano, cálida, cámara en mano","categoria":"Cinematográficos","estilo":"Vlog urbano","iluminacion":"Cálida","encuadre":"Cámara en mano","formato":"9:16 · 30fps · 15s"},{"id":12,"nombre":"Timelapse día‑noche","descripcion":"Timelapse, natural variable, cámara fija","categoria":"Cámara & Técnica","estilo":"Timelapse","iluminacion":"Natural variable","encuadre":"Cámara fija","formato":"16:9 · 24fps · 12s"},{"id":13,"nombre":"Publicidad producto premium","descripcion":"Publicidad premium, softbox + rim, macro","categoria":"Interiores & Producto","estilo":"Publicidad premium","iluminacion":"Softbox + rim","encuadre":"Macro","formato":"16:9 · 24fps · 10s"},{"id":14,"nombre":"Fantasía épica","descripcion":"Épico, luz volumétrica, travelling general","categoria":"Fantasía & Épico","estilo":"Épico","iluminacion":"Luz volumétrica","encuadre":"Travelling general","formato":"21:9 · 24fps · 12s"},{"id":15,"nombre":"Batalla aérea de energía","descripcion":"Acción fantástica, efectos luminosos, cámara girando","categoria":"Cinematográficos","estilo":"Acción fantástica","iluminacion":"Efectos luminosos","encuadre":"Cámara girando","formato":"16:9 · 24fps · 12s"},{"id":16,"nombre":"Combate en bosque otoñal","descripcion":"Acción, cálida con hojas, cámara en círculo","categoria":"Cinematográficos","estilo":"Acción","iluminacion":"Cálida con hojas","encuadre":"Cámara en círculo","formato":"16:9 · 24fps · 12s"},{"id":17,"nombre":"Persecución marítima","descripcion":"Aventura, luz solar intensa, paneo sobre barcos","categoria":"Cinematográficos","estilo":"Aventura","iluminacion":"Luz solar intensa","encuadre":"Paneo sobre barcos","formato":"21:9 · 24fps · 10s"},{"id":18,"nombre":"Choque de espadas místico","descripcion":"Acción mística, contraluz, slow‑motion en impacto","categoria":"Cinematográficos","estilo":"Acción mística","iluminacion":"Contraluz","encuadre":"Slow‑motion en impacto","formato":"16:9 · 24fps · 8s"},{"id":19,"nombre":"Entrenamiento heroico urbano","descripcion":"Entrenamiento, contraluz dramático, cámara en mano","categoria":"Cinematográficos","estilo":"Entrenamiento","iluminacion":"Contraluz dramático","encuadre":"Cámara en mano","formato":"16:9 · 24fps · 10s"},{"id":20,"nombre":"Defensa de muralla colosal","descripcion":"Épico murallas, amanecer volumétrico, travelling vertical","categoria":"Fantasía & Épico","estilo":"Épico murallas","iluminacion":"Amanecer volumétrico","encuadre":"Travelling vertical","formato":"21:9 · 24fps · 12s"},{"id":21,"nombre":"Drama urbano al amanecer","descripcion":"Drama, tonos cálidos, steadycam suave","categoria":"Cinematográficos","estilo":"Drama","iluminacion":"Tonos cálidos","encuadre":"Steadycam suave","formato":"16:9 · 24fps · 12s"},{"id":22,"nombre":"Thriller en pasillo oscuro","descripcion":"Thriller, foco selectivo, cámara lenta","categoria":"Cinematográficos","estilo":"Thriller","iluminacion":"Foco selectivo","encuadre":"Cámara lenta","formato":"16:9 · 24fps · 10s"},{"id":23,"nombre":"Comedia en cafetería","descripcion":"Comedia, uniforme, cámara fija","categoria":"Cinematográficos","estilo":"Comedia","iluminacion":"Uniforme","encuadre":"Cámara fija","formato":"16:9 · 24fps · 8s"},{"id":24,"nombre":"Terror en bosque nocturno","descripcion":"Terror, linterna como key, handheld temblorosa","categoria":"Cinematográficos","estilo":"Terror","iluminacion":"Linterna como key","encuadre":"Handheld temblorosa","formato":"16:9 · 24fps · 12s"},{"id":25,"nombre":"Western polvoriento","descripcion":"Western, atardecer cálido, travelling al horizonte","categoria":"Cinematográficos","estilo":"Western","iluminacion":"Atardecer cálido","encuadre":"Travelling al horizonte","formato":"21:9 · 24fps · 12s"},{"id":26,"nombre":"Musical callejero","descripcion":"Musical, cálida y festiva, cámara girando","categoria":"Cinematográficos","estilo":"Musical","iluminacion":"Cálida y festiva","encuadre":"Cámara girando","formato":"16:9 · 24fps · 15s"},{"id":27,"nombre":"Cine noir detectivesco","descripcion":"Noir B/N, alto contraste, cámara baja con humo","categoria":"Cinematográficos","estilo":"Noir B/N","iluminacion":"Alto contraste","encuadre":"Cámara baja con humo","formato":"4:3 · 24fps · 10s"},{"id":28,"nombre":"Romance en puente lluvioso","descripcion":"Romance, gotas cayendo, slow‑motion","categoria":"Cinematográficos","estilo":"Romance","iluminacion":"Gotas cayendo","encuadre":"Slow‑motion","formato":"16:9 · 24fps · 12s"},{"id":29,"nombre":"Persecución en calle estrecha","descripcion":"Acción urbana, natural, handheld rápida","categoria":"Cinematográficos","estilo":"Acción urbana","iluminacion":"Natural","encuadre":"Handheld rápida","formato":"16:9 · 30fps · 8s"},{"id":30,"nombre":"Guerra de trincheras","descripcion":"Bélico, barro y humo, cámara baja","categoria":"Cinematográficos","estilo":"Bélico","iluminacion":"Barro y humo","encuadre":"Cámara baja","formato":"21:9 · 24fps · 12s"},{"id":31,"nombre":"Cascada tropical","descripcion":"Documental naturalista, bruma de agua, dron descendente","categoria":"Naturaleza & Documental","estilo":"Documental naturalista","iluminacion":"Bruma de agua","encuadre":"Dron descendente","formato":"16:9 · 24fps · 10s"},{"id":32,"nombre":"Glaciar con auroras","descripcion":"Documental nocturno, auroras, cámara estática","categoria":"Naturaleza & Documental","estilo":"Documental nocturno","iluminacion":"Auroras","encuadre":"Cámara estática","formato":"21:9 · 24fps · 12s"},{"id":33,"nombre":"Migración de aves","descripcion":"Documental fauna, luz natural, teleobjetivo","categoria":"Naturaleza & Documental","estilo":"Documental fauna","iluminacion":"Luz natural","encuadre":"Teleobjetivo","formato":"16:9 · 24fps · 12s"},{"id":34,"nombre":"Safari con elefantes","descripcion":"Documental, polvo levantado, cámara baja","categoria":"Naturaleza & Documental","estilo":"Documental","iluminacion":"Polvo levantado","encuadre":"Cámara baja","formato":"16:9 · 24fps · 12s"},{"id":35,"nombre":"Nido de aves exóticas","descripcion":"Macro naturaleza, luz suave, macro rama","categoria":"Naturaleza & Documental","estilo":"Macro naturaleza","iluminacion":"Luz suave","encuadre":"Macro rama","formato":"4:3 · 24fps · 8s"},{"id":36,"nombre":"Inmersión submarina","descripcion":"Submarino, luz filtrada, cámara lenta","categoria":"Naturaleza & Documental","estilo":"Submarino","iluminacion":"Luz filtrada","encuadre":"Cámara lenta","formato":"16:9 · 24fps · 15s"},{"id":37,"nombre":"Niebla en bosque templado","descripcion":"Bosque húmedo, difusa, paneo lento","categoria":"Naturaleza & Documental","estilo":"Bosque húmedo","iluminacion":"Difusa","encuadre":"Paneo lento","formato":"16:9 · 24fps · 10s"},{"id":38,"nombre":"Noche estrellada en desierto","descripcion":"Timelapse nocturno, vía láctea, cámara fija","categoria":"Naturaleza & Documental","estilo":"Timelapse nocturno","iluminacion":"Vía láctea","encuadre":"Cámara fija","formato":"16:9 · 24fps · 12s"},{"id":39,"nombre":"Campo de flores","descripcion":"Macro paisaje, luz suave, travelling bajo","categoria":"Naturaleza & Documental","estilo":"Macro paisaje","iluminacion":"Luz suave","encuadre":"Travelling bajo","formato":"16:9 · 24fps · 8s"},{"id":40,"nombre":"Tormenta eléctrica","descripcion":"Clima extremo, relámpagos, cámara fija","categoria":"Naturaleza & Documental","estilo":"Clima extremo","iluminacion":"Relámpagos","encuadre":"Cámara fija","formato":"16:9 · 24fps · 10s"},{"id":41,"nombre":"Ciudad aérea flotante","descripcion":"Sci‑fi urbano, luz fría, dron entre torres","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi urbano","iluminacion":"Luz fría","encuadre":"Dron entre torres","formato":"16:9 · 24fps · 10s"},{"id":42,"nombre":"Batalla espacial","descripcion":"Space opera, láseres y destellos, cámara libre","categoria":"Futuristas & Sci‑Fi","estilo":"Space opera","iluminacion":"Láseres y destellos","encuadre":"Cámara libre","formato":"21:9 · 24fps · 12s"},{"id":43,"nombre":"Laboratorio de alta tecnología","descripcion":"Tech lab, hologramas, paneo suave","categoria":"Futuristas & Sci‑Fi","estilo":"Tech lab","iluminacion":"Hologramas","encuadre":"Paneo suave","formato":"16:9 · 24fps · 8s"},{"id":44,"nombre":"Desierto alienígena","descripcion":"Sci‑fi desértico, cielo verde, dron","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi desértico","iluminacion":"Cielo verde","encuadre":"Dron","formato":"21:9 · 24fps · 12s"},{"id":45,"nombre":"Mercado interplanetario","descripcion":"Sci‑fi multicultural, luces diversas, cámara en mano","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi multicultural","iluminacion":"Luces diversas","encuadre":"Cámara en mano","formato":"16:9 · 24fps · 10s"},{"id":46,"nombre":"Portal dimensional","descripcion":"Sci‑fi energético, luz pulsante, cámara girando","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi energético","iluminacion":"Luz pulsante","encuadre":"Cámara girando","formato":"16:9 · 24fps · 12s"},{"id":47,"nombre":"Exterior estación espacial","descripcion":"Sci‑fi exterior, luz dura, travelling pasarela","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi exterior","iluminacion":"Luz dura","encuadre":"Travelling pasarela","formato":"16:9 · 24fps · 10s"},{"id":48,"nombre":"Reactor de energía","descripcion":"Tech industrial, vibración, planos detalle","categoria":"Futuristas & Sci‑Fi","estilo":"Tech industrial","iluminacion":"Vibración","encuadre":"Planos detalle","formato":"16:9 · 24fps · 8s"},{"id":49,"nombre":"Bosque bioluminiscente","descripcion":"Naturaleza luminosa, brillos orgánicos, cámara lenta","categoria":"Futuristas & Sci‑Fi","estilo":"Naturaleza luminosa","iluminacion":"Brillos orgánicos","encuadre":"Cámara lenta","formato":"16:9 · 24fps · 12s"},{"id":50,"nombre":"Base subterránea","descripcion":"Sci‑fi base, luz artificial, steadycam","categoria":"Futuristas & Sci‑Fi","estilo":"Sci‑fi base","iluminacion":"Luz artificial","encuadre":"Steadycam","formato":"16:9 · 24fps · 10s"},{"id":51,"nombre":"Castillo flotante","descripcion":"Fantasía aérea, rayos volumétricos, grúa ascendente","categoria":"Fantasía & Épico","estilo":"Fantasía aérea","iluminacion":"Rayos volumétricos","encuadre":"Grúa ascendente","formato":"21:9 · 24fps · 12s"},{"id":52,"nombre":"Bosque encantado","descripcion":"Fantástico, partículas mágicas, cámara baja","categoria":"Fantasía & Épico","estilo":"Fantástico","iluminacion":"Partículas mágicas","encuadre":"Cámara baja","formato":"16:9 · 24fps · 10s"},{"id":53,"nombre":"Dragón sobrevolando montaña","descripcion":"Épico fantástico, luz crepuscular, tilt‑up","categoria":"Fantasía & Épico","estilo":"Épico fantástico","iluminacion":"Luz crepuscular","encuadre":"Tilt‑up","formato":"21:9 · 24fps · 12s"},{"id":54,"nombre":"Hechicero invocando luz","descripcion":"Magia, rayos celestes, cámara lenta","categoria":"Fantasía & Épico","estilo":"Magia","iluminacion":"Rayos celestes","encuadre":"Cámara lenta","formato":"16:9 · 24fps · 8s"},{"id":55,"nombre":"Batalla medieval masiva","descripcion":"Épico, polvo y caos, cámara aérea","categoria":"Fantasía & Épico","estilo":"Épico","iluminacion":"Polvo y caos","encuadre":"Cámara aérea","formato":"21:9 · 24fps · 12s"},{"id":56,"nombre":"Puente colgante sobre abismo","descripcion":"Aventura, viento y altura, travelling lento","categoria":"Fantasía & Épico","estilo":"Aventura","iluminacion":"Viento y altura","encuadre":"Travelling lento","formato":"16:9 · 24fps · 8s"},{"id":57,"nombre":"Caravana en desierto","descripcion":"Aventura desierto, calor ondulante, plano general","categoria":"Fantasía & Épico","estilo":"Aventura desierto","iluminacion":"Calor ondulante","encuadre":"Plano general","formato":"21:9 · 24fps · 12s"},{"id":58,"nombre":"Río subterráneo iluminado","descripcion":"Aventura cavernas, antorchas, steadycam en barca","categoria":"Fantasía & Épico","estilo":"Aventura cavernas","iluminacion":"Antorchas","encuadre":"Steadycam en barca","formato":"16:9 · 24fps · 10s"},{"id":59,"nombre":"Gigante emergiendo del mar","descripcion":"Épico criatura, espuma y vibración, handheld nerviosa","categoria":"Fantasía & Épico","estilo":"Épico criatura","iluminacion":"Espuma y vibración","encuadre":"Handheld nerviosa","formato":"21:9 · 24fps · 12s"},{"id":60,"nombre":"Travesía en bosque nevado","descripcion":"Aventura fría, nieve fina, cámara lateral","categoria":"Fantasía & Épico","estilo":"Aventura fría","iluminacion":"Nieve fina","encuadre":"Cámara lateral","formato":"16:9 · 24fps · 10s"},{"id":61,"nombre":"Vintage 70s","descripcion":"Fílmico vintage, tonos cálidos con grano, paneo suave","categoria":"Estilos visuales","estilo":"Fílmico vintage","iluminacion":"Tonos cálidos con grano","encuadre":"Paneo suave","formato":"16:9 · 24fps · 10s"},{"id":62,"nombre":"Blanco y negro clásico","descripcion":"Noir clásico, contraste alto, cámara fija","categoria":"Estilos visuales","estilo":"Noir clásico","iluminacion":"Contraste alto","encuadre":"Cámara fija","formato":"4:3 · 24fps · 8s"},{"id":63,"nombre":"Duotono magenta/azul","descripcion":"Color design, duotono intenso, cámara fija","categoria":"Estilos visuales","estilo":"Color design","iluminacion":"Duotono intenso","encuadre":"Cámara fija","formato":"16:9 · 24fps · 10s"},{"id":64,"nombre":"Y2K brillante","descripcion":"Y2K glossy, destellos especulares, paneo corto","categoria":"Estilos visuales","estilo":"Y2K glossy","iluminacion":"Destellos especulares","encuadre":"Paneo corto","formato":"16:9 · 24fps · 10s"},{"id":65,"nombre":"Cine experimental","descripcion":"Experimental, desenfoques y zooms, cámara libre","categoria":"Estilos visuales","estilo":"Experimental","iluminacion":"Desenfoques y zooms","encuadre":"Cámara libre","formato":"16:9 · 24fps · 8s"},{"id":66,"nombre":"Fotografía en movimiento","descripcion":"Macro motion, luz dirigida, macro rotando","categoria":"Estilos visuales","estilo":"Macro motion","iluminacion":"Luz dirigida","encuadre":"Macro rotando","formato":"16:9 · 24fps · 10s"},{"id":67,"nombre":"Ojo de pez","descripcion":"Fish‑eye, distorsión, pov circular","categoria":"Estilos visuales","estilo":"Fish‑eye","iluminacion":"Distorsión","encuadre":"POV circular","formato":"16:9 · 24fps · 8s"},{"id":68,"nombre":"Cámara térmica simulada","descripcion":"Falso color térmico, mapa de calor, cámara fija","categoria":"Estilos visuales","estilo":"Falso color térmico","iluminacion":"Mapa de calor","encuadre":"Cámara fija","formato":"16:9 · 24fps · 10s"},{"id":69,"nombre":"Videoclip lofi","descripcion":"Lofi suave, iluminación tenue, handheld lenta","categoria":"Estilos visuales","estilo":"Lofi suave","iluminacion":"Iluminación tenue","encuadre":"Handheld lenta","formato":"16:9 · 24fps · 12s"},{"id":70,"nombre":"Neón retro saturado","descripcion":"Retrowave, neón intenso, travelling nocturno","categoria":"Estilos visuales","estilo":"Retrowave","iluminacion":"Neón intenso","encuadre":"Travelling nocturno","formato":"16:9 · 24fps · 10s"},{"id":71,"nombre":"Paneo 360°","descripcion":"Panorámica 360, luz uniforme, giro completo","categoria":"Cámara & Técnica","estilo":"Panorámica 360","iluminacion":"Luz uniforme","encuadre":"Giro completo","formato":"16:9 · 24fps · 8s"},{"id":72,"nombre":"Travelling dolly in","descripcion":"Dolly in, key suave, avance progresivo","categoria":"Cámara & Técnica","estilo":"Dolly in","iluminacion":"Key suave","encuadre":"Avance progresivo","formato":"16:9 · 24fps · 10s"},{"id":73,"nombre":"Dolly zoom vértigo","descripcion":"Dolly zoom, contraste medio, efecto vértigo","categoria":"Cámara & Técnica","estilo":"Dolly zoom","iluminacion":"Contraste medio","encuadre":"Efecto vértigo","formato":"16:9 · 24fps · 8s"},{"id":74,"nombre":"Dron descendente","descripcion":"Dron vertical, luz natural, descenso panorámico","categoria":"Cámara & Técnica","estilo":"Dron vertical","iluminacion":"Luz natural","encuadre":"Descenso panorámico","formato":"16:9 · 24fps · 10s"},{"id":75,"nombre":"Documental handheld","descripcion":"Docu en mano, natural, movimientos naturales","categoria":"Cámara & Técnica","estilo":"Docu en mano","iluminacion":"Natural","encuadre":"Movimientos naturales","formato":"16:9 · 24fps · 8s"},{"id":76,"nombre":"Timelapse urbano","descripcion":"Timelapse tráfico, neón y faros, cámara fija","categoria":"Cámara & Técnica","estilo":"Timelapse tráfico","iluminacion":"Neón y faros","encuadre":"Cámara fija","formato":"16:9 · 24fps · 12s"},{"id":77,"nombre":"Hyperlapse peatonal","descripcion":"Hyperlapse, luz diurna, caminata entre edificios","categoria":"Cámara & Técnica","estilo":"Hyperlapse","iluminacion":"Luz diurna","encuadre":"Caminata entre edificios","formato":"16:9 · 24fps · 12s"},{"id":78,"nombre":"Cámara sumergida","descripcion":"Transición agua, luz filtrada, entrada/salida agua","categoria":"Cámara & Técnica","estilo":"Transición agua","iluminacion":"Luz filtrada","encuadre":"Entrada/salida agua","formato":"16:9 · 24fps · 8s"},{"id":79,"nombre":"POV primera persona","descripcion":"Subjetiva, natural, pov activo","categoria":"Cámara & Técnica","estilo":"Subjetiva","iluminacion":"Natural","encuadre":"POV activo","formato":"16:9 · 24fps · 10s"},{"id":80,"nombre":"Cámara lenta extrema","descripcion":"Slow‑motion, alta intensidad, 1000 fps simulado","categoria":"Cámara & Técnica","estilo":"Slow‑motion","iluminacion":"Alta intensidad","encuadre":"1000 fps simulado","formato":"16:9 · 24fps · 8s"},{"id":81,"nombre":"Cocina minimalista","descripcion":"Cocina bright, luz natural, slow pan","categoria":"Interiores & Producto","estilo":"Cocina bright","iluminacion":"Luz natural","encuadre":"Slow pan","formato":"16:9 · 24fps · 10s"},{"id":82,"nombre":"Taller mecánico","descripcion":"Industrial, backlight, macro herramientas","categoria":"Interiores & Producto","estilo":"Industrial","iluminacion":"Backlight","encuadre":"Macro herramientas","formato":"16:9 · 24fps · 8s"},{"id":83,"nombre":"Estudio fotográfico","descripcion":"Moda/Portrait, key/fill/rim, paneo modelos","categoria":"Interiores & Producto","estilo":"Moda/Portrait","iluminacion":"Key/fill/rim","encuadre":"Paneo modelos","formato":"16:9 · 24fps · 12s"},{"id":84,"nombre":"Sala de conciertos","descripcion":"Concierto, backlight color, travelling a escenario","categoria":"Interiores & Producto","estilo":"Concierto","iluminacion":"Backlight color","encuadre":"Travelling a escenario","formato":"16:9 · 24fps · 10s"},{"id":85,"nombre":"Exhibición de arte","descripcion":"Museo, luz controlada, steadycam","categoria":"Interiores & Producto","estilo":"Museo","iluminacion":"Luz controlada","encuadre":"Steadycam","formato":"16:9 · 24fps · 12s"},{"id":86,"nombre":"Laboratorio químico","descripcion":"Lab, iluminación fría, planos detalle","categoria":"Interiores & Producto","estilo":"Lab","iluminacion":"Iluminación fría","encuadre":"Planos detalle","formato":"16:9 · 24fps · 8s"},{"id":87,"nombre":"Tienda vintage","descripcion":"Vintage shop, tibia, cámara lenta de objetos","categoria":"Interiores & Producto","estilo":"Vintage shop","iluminacion":"Tibia","encuadre":"Cámara lenta de objetos","formato":"16:9 · 24fps · 12s"},{"id":88,"nombre":"Sala de control","descripcion":"Control room, pantallas, paneo parpadeos","categoria":"Interiores & Producto","estilo":"Control room","iluminacion":"Pantallas","encuadre":"Paneo parpadeos","formato":"16:9 · 24fps · 8s"},{"id":89,"nombre":"Showroom de coches","descripcion":"Automoción, luz especular, travelling carrocería","categoria":"Interiores & Producto","estilo":"Automoción","iluminacion":"Luz especular","encuadre":"Travelling carrocería","formato":"16:9 · 24fps · 10s"},{"id":90,"nombre":"Coworking moderno","descripcion":"Oficina moderna, luz difusa, paneo suave","categoria":"Interiores & Producto","estilo":"Oficina moderna","iluminacion":"Luz difusa","encuadre":"Paneo suave","formato":"16:9 · 24fps · 10s"},{"id":91,"nombre":"Explosión slow‑motion","descripcion":"FX partículas, chispas y humo, cámara lenta","categoria":"Especiales & Efectos","estilo":"FX partículas","iluminacion":"Chispas y humo","encuadre":"Cámara lenta","formato":"16:9 · 24fps · 8s"},{"id":92,"nombre":"Lluvia sobre cristal","descripcion":"FX agua, backlight, macro en cristal","categoria":"Especiales & Efectos","estilo":"FX agua","iluminacion":"Backlight","encuadre":"Macro en cristal","formato":"16:9 · 24fps · 8s"},{"id":93,"nombre":"Nieve en contraluz","descripcion":"FX nieve, contraluz frío, slow‑motion","categoria":"Especiales & Efectos","estilo":"FX nieve","iluminacion":"Contraluz frío","encuadre":"Slow‑motion","formato":"16:9 · 24fps · 10s"},{"id":94,"nombre":"Partículas doradas","descripcion":"FX partículas, brillo, cámara fija fondo negro","categoria":"Especiales & Efectos","estilo":"FX partículas","iluminacion":"Brillo","encuadre":"Cámara fija fondo negro","formato":"16:9 · 24fps · 8s"},{"id":95,"nombre":"Humo en reversa","descripcion":"FX humo, surreal, reverse motion","categoria":"Especiales & Efectos","estilo":"FX humo","iluminacion":"Surreal","encuadre":"Reverse motion","formato":"16:9 · 24fps · 8s"},{"id":96,"nombre":"Cristales rompiéndose","descripcion":"FX cristal, backlight, macro ruptura","categoria":"Especiales & Efectos","estilo":"FX cristal","iluminacion":"Backlight","encuadre":"Macro ruptura","formato":"16:9 · 24fps · 8s"},{"id":97,"nombre":"Tinta en agua","descripcion":"FX tinta, difusa, macro colorido","categoria":"Especiales & Efectos","estilo":"FX tinta","iluminacion":"Difusa","encuadre":"Macro colorido","formato":"16:9 · 24fps · 8s"},{"id":98,"nombre":"Luz estroboscópica","descripcion":"FX luz, rítmica, cámara fija","categoria":"Especiales & Efectos","estilo":"FX luz","iluminacion":"Rítmica","encuadre":"Cámara fija","formato":"16:9 · 24fps · 8s"},{"id":99,"nombre":"Llama danzante","descripcion":"FX fuego, fondo oscuro, macro llama","categoria":"Especiales & Efectos","estilo":"FX fuego","iluminacion":"Fondo oscuro","encuadre":"Macro llama","formato":"16:9 · 24fps · 8s"},{"id":100,"nombre":"Agua derramándose","descripcion":"FX agua, alta velocidad, macro vertido","categoria":"Especiales & Efectos","estilo":"FX agua","iluminacion":"Alta velocidad","encuadre":"Macro vertido","formato":"16:9 · 24fps · 8s"},{"id":101,"nombre":"Animación 2D & 3D: dolly suave dramático","descripcion":"Dolly suave, luz natural difusa, primer plano","categoria":"Animación 2D & 3D","estilo":"Dolly suave","iluminacion":"Luz natural difusa","encuadre":"Primer plano","formato":"21:9 · 24fps · 10s"},{"id":102,"nombre":"Animación 2D & 3D: estilo documental rápido","descripcion":"Estilo documental, luz natural difusa, aéreo (dron)","categoria":"Animación 2D & 3D","estilo":"Estilo documental","iluminacion":"Luz natural difusa","encuadre":"Aéreo (dron)","formato":"16:9 · 30fps · 6s"},{"id":103,"nombre":"Animación 2D & 3D: dolly suave sereno","descripcion":"Dolly suave, alta clave, teleobjetivo 85mm","categoria":"Animación 2D & 3D","estilo":"Dolly suave","iluminacion":"Alta clave","encuadre":"Teleobjetivo 85mm","formato":"16:9 · 30fps · 8s"},{"id":104,"nombre":"Animación 2D & 3D: timelapse orgánico","descripcion":"Timelapse, alta clave, aéreo (dron)","categoria":"Animación 2D & 3D","estilo":"Timelapse","iluminacion":"Alta clave","encuadre":"Aéreo (dron)","formato":"16:9 · 30fps · 12s"},{"id":105,"nombre":"Animación 2D & 3D: estilo documental dramático","descripcion":"Estilo documental, alta clave, aéreo (dron)","categoria":"Animación 2D & 3D","estilo":"Estilo documental","iluminacion":"Alta clave","encuadre":"Aéreo (dron)","formato":"21:9 · 24fps · 12s"},{"id":106,"nombre":"Animación 2D & 3D: traveling lateral dramático","descripcion":"Traveling lateral, nocturna con bokeh, plano general","categoria":"Animación 2D & 3D","estilo":"Traveling lateral","iluminacion":"Nocturna con bokeh","encuadre":"Plano general","formato":"21:9 · 30fps · 8s"}]};
+  const LIB = {"colores": {"basicos": ["rojo", "azul", "verde", "amarillo", "naranja", "morado", "rosa", "cian", "magenta", "turquesa", "lima", "granate", "beige", "marrón", "negro", "blanco", "gris"], "extendidos": ["coral", "melocotón", "ocre", "mostaza", "azul petróleo", "azul ultramar", "azul pastel", "lavanda", "malva", "lila", "menta", "salvia", "oliva", "terracota", "burdeos", "champán", "peltre"], "paletas": ["complementarios cálidos/fríos", "análogos cálidos", "análogos fríos", "monocromo azul", "monocromo rojo", "duotono púrpura‑dorado", "teal & orange", "pastel suave", "neón saturado", "tierra (ocres/sepia)", "alto contraste B/N", "retro 80s neón", "Y2K brillante", "vaporwave"], "efectos": ["iridiscente", "metálico", "nacarado", "holográfico", "desaturado", "lavado", "grainy film", "matte", "glossy", "glow suave"]}, "iluminacion": {"natural": ["amanecer dorado", "mediodía neutral", "atardecer anaranjado", "hora azul", "luz de luna", "contraluz solar", "luz difusa nublada", "rayos volumétricos entre árboles"], "artificial": ["neón púrpura/dorado", "fluorescente frío", "incandescente cálido", "softbox lateral", "rim light azul", "backlight dramático", "spot cenital", "luz práctica (lamparitas)"], "cinematica": ["volumetric lighting", "silhouette lighting", "motivated lighting", "bounce suave", "key/fill/rim balanceado", "chiaroscuro"], "especial": ["bioluminiscencia", "luz mágica", "fuego titilante", "velas múltiples", "relámpagos intermitentes", "pantallas LED como luz principal"]}, "planos": {"tipos": ["plano general", "plano conjunto", "plano americano", "plano medio", "primer plano", "plano detalle/macro", "plano secuencia"], "angulos": ["cenital", "nadir", "picado", "contrapicado", "lateral", "tres cuartos", "POV/subjetiva"], "lentes": ["gran angular", "normal 50mm", "teleobjetivo", "ojo de pez", "macro", "tilt‑shift"], "composicion": ["regla de tercios", "simetría central", "marco dentro del marco", "líneas de fuga", "negativo amplio", "centrado minimalista"], "profundidad_campo": ["bokeh fuerte", "profundidad media", "todo a foco (f/11+)"]}, "camara_mov": {"movimientos": ["paneo lento", "paneo rápido", "tilt ascendente", "tilt descendente", "travelling lateral", "dolly in", "dolly out", "grúa ascendente", "grúa descendente", "dolly zoom", "handheld con ligero temblor", "steadycam suave", "hyperlapse peatonal", "timelapse fijo", "dron estable", "dron orbitando", "gimbal follow"]}, "estilos": {"dos_d": ["manga B/N", "shōnen dinámico", "shojo suave", "cartoon plano", "caricatura", "pixel art", "ukiyo‑e", "acuarela", "gouache", "tinta y plumilla"], "tres_d": ["CGI fotorrealista", "low poly", "high poly", "clay render", "toon shading", "pintura matte 3D"], "fotografia": ["editorial moda", "producto estudio", "documental naturalista", "arquitectura minimalista", "analógico 35mm grunge", "macro"], "graficos": ["collage surreal", "minimalismo geométrico", "arte deco moderno", "brutalismo digital", "vaporwave", "retrowave", "Y2K glossy", "solarpunk", "dieselpunk", "steampunk"]}, "materiales_texturas": {"materiales": ["metal cepillado", "acero pulido", "latón envejecido", "cobre", "aluminio anodizado", "madera natural", "madera quemada (shou sugi ban)", "piedra caliza", "mármol", "granito", "hormigón", "ladrillo visto", "vidrio esmerilado", "cristal facetado", "plástico mate", "plástico brillante", "arcilla", "papel artesanal", "tela lino", "terciopelo", "cuero", "goma"], "acabados": ["mate", "satinado", "brillante", "barnizado", "envejecido", "oxidado", "craquelado", "texturizado", "traslúcido", "transparente", "opalescente"]}, "ambientes": {"urbanos": ["callejón lluvioso", "avenida nocturna", "azotea con skyline", "metro futurista", "mercado nocturno", "puerto industrial", "barrio viejo empedrado", "rascacielos de vidrio"], "naturaleza": ["bosque templado", "selva húmeda", "desierto rocoso", "playa tropical", "acantilado costero", "montaña nevada", "pradera con flores", "cascada"], "interiores": ["estudio minimalista blanco", "loft industrial", "cabaña de madera", "biblioteca antigua", "laboratorio moderno", "taller mecánico", "cocina luminosa", "templo"], "clima_atmosfera": ["niebla densa", "llovizna", "tormenta eléctrica", "nieve ligera", "polvo en suspensión", "humo teatral", "cielo despejado"], "fantasia_scifi": ["estación espacial", "planeta bioluminiscente", "ciudad flotante", "ruinas antiguas místicas", "portal dimensional", "castillo en el cielo"], "historico": ["medieval europeo", "renacentista", "victoriano", "dieselpunk industrial", "retro 80s urbano", "Y2K urbano"]}, "accesorios_elementos": {"personaje": ["capa ondeando", "armadura ligera", "guantes técnicos", "gafas retro", "mochila táctica", "varita luminosa", "espada brillante", "libro antiguo"], "entorno": ["carteles de neón", "linternas de papel", "toldos de mercado", "cables colgantes", "grafitis", "vallas metálicas", "plantas trepadoras"], "fx": ["partículas de polvo", "chispas", "fogonazos", "niebla baja", "bokeh de luces", "destello anamórfico", "grano fílmico"]}, "motivos_patrones": ["chevron", "espiga", "geométrico isométrico", "rombos", "líneas paralelas", "puntos halftone", "ondas retro", "grecas art déco", "floral minimalista"], "epocas": ["prehistórico", "antiguo clásico", "medieval", "renacimiento", "barroco", "victoriano", "modernismo", "art déco", "mid-century", "setentas", "ochentas", "noventas", "Y2K", "actual"], "color_grading": ["Kodak warm", "Fujifilm cool", "bleach bypass", "cross‑process", "teal & orange cinematográfico", "low‑contrast pastel", "high‑contrast gritty", "noir B/N"], "formatos": ["1:1", "4:3", "3:2", "16:9", "21:9", "9:16", "2:1", "5:4"], "resoluciones": ["1024x1024", "1920x1080", "2048x1152", "2560x1440", "3840x2160"], "negativo_sugerido": ["sin texto", "sin marcas de agua", "sin logos", "sin manos deformes", "sin artefactos", "sin duplicados", "sin ruido excesivo"]};
+  const RATIOS = ["1:1", "4:3", "3:2", "16:9", "21:9", "9:16", "2:1", "5:4"];
+  const RESOLUCIONES = ["1024x1024", "1920x1080", "2048x1152", "2560x1440", "3840x2160", "1080x1920", "2160x3840"];
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const toast = (msg) => { const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); };
+  const tooltip = $('#tooltip');
+  const root = document.documentElement;
+
+  // ---- Tooltip helpers (restored) ----
+  function showTooltip(e, p){
+    if(!tooltip) return;
+    tooltip.innerHTML = `
+      <div class="tline"><span class="tlabel">Estilo:</span> ${p.estilo||'—'}</div>
+      <div class="tline"><span class="tlabel">Iluminación:</span> ${p.iluminacion||'—'}</div>
+      <div class="tline"><span class="tlabel">Encuadre/Cámara:</span> ${p.encuadre||'—'}</div>
+      <div class="tline"><span class="tlabel">Formato:</span> ${p.formato||'—'}</div>`;
+    const pad=12; const x=e.clientX+pad, y=e.clientY+pad;
+    tooltip.style.left = x+'px'; tooltip.style.top = y+'px'; tooltip.style.display='block';
+  }
+  function hideTooltip(){ if(tooltip) tooltip.style.display='none'; }
+
+  // Theme button
+  const themeBtn = $('#themeBtn');
+  const iconMoon = $('#iconMoon');
+  const iconSun = $('#iconSun');
+  const savedTheme = localStorage.getItem('gp_theme') || 'light';
+  root.setAttribute('data-theme', savedTheme);
+  const dark = savedTheme==='dark';
+  iconMoon.style.display = dark ? 'none' : 'block';
+  iconSun.style.display = dark ? 'block' : 'none';
+  themeBtn.addEventListener('click', ()=>{
+    const now = root.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', now);
+    localStorage.setItem('gp_theme', now);
+    const dark = now==='dark';
+    iconMoon.style.display = dark ? 'none' : 'block';
+    iconSun.style.display = dark ? 'block' : 'none';
+  });
+
+  // Fill selects
+  function fillSelect(sel, arr){ sel.innerHTML=''; arr.forEach(v=>{ const o=document.createElement('option'); o.textContent=v; o.value=v; sel.appendChild(o); }); }
+  fillSelect($('#ratioI'), RATIOS);
+  fillSelect($('#resI'), RESOLUCIONES);
+
+  // Render checklist helpers (kept)
+  function renderChecklist(containerId, arr){
+    const c = $(containerId); c.innerHTML='';
+    arr.forEach((txt,i)=>{ const w = document.createElement('label'); w.className='opt'; w.dataset.label = txt.toLowerCase();
+      w.innerHTML = `<input type="checkbox" value="${txt}"><span>${txt}</span>`; c.appendChild(w); });
+  }
+  renderChecklist('#libEstI', LIB.estilos.dos_d.concat(LIB.estilos.tres_d).concat(LIB.estilos.graficos).concat(LIB.estilos.fotografia));
+  renderChecklist('#libLuzI', LIB.iluminacion.natural.concat(LIB.iluminacion.artificial).concat(LIB.iluminacion.cinematica).concat(LIB.iluminacion.especial).concat(LIB.colores.paletas).concat(LIB.colores.efectos));
+  renderChecklist('#libEncI', LIB.planos.tipos.concat(LIB.planos.angulos).concat(LIB.planos.lentes).concat(LIB.planos.composicion).concat(LIB.planos.profundidad_campo));
+  renderChecklist('#libFilmV', LIB.estilos.dos_d.concat(LIB.estilos.tres_d).concat(LIB.estilos.graficos).concat(["cinematográfico moderno","documental naturalista","noir clásico","publicidad premium"]));
+  renderChecklist('#libCamV', LIB.camara_mov.movimientos);
+  renderChecklist('#libLuzV', LIB.iluminacion.natural.concat(LIB.iluminacion.artificial).concat(LIB.iluminacion.cinematica).concat(LIB.iluminacion.especial).concat(LIB.colores.paletas).concat(LIB.colores.efectos));
+
+  // Apply/Clear per dropdown
+  function applyFrom(container, targetId){
+    const vals = $$(container+' input[type=checkbox]:checked').map(x=>x.value);
+    if(!vals.length) return;
+    const el = $('#'+targetId);
+    const base = (el.value||'').trim();
+    el.value = base ? base + ', ' + vals.join(', ') : vals.join(', ');
+  }
+  function clearChecks(container){ $$(container+' input[type=checkbox]').forEach(x=>x.checked=false); }
+
+  $$('.drop').forEach(d => {
+    const applyBtn = d.querySelector('[data-apply]');
+    const clearBtn = d.querySelector('[data-clear]');
+    if(applyBtn){
+      applyBtn.addEventListener('click', () => {
+        const target = applyBtn.dataset.apply;
+        const container = '#'+d.querySelector('.opt-grid').id;
+        applyFrom(container, target);
+      });
+    }
+    if(clearBtn){
+      clearBtn.addEventListener('click', () => {
+        const containerId = '#'+clearBtn.dataset.clear;
+        clearChecks(containerId);
+      });
+    }
+  });
+
+  // Generators
+  function genImagen(){
+    const p=[];
+    const tema=$('#temaI').value.trim(), det=$('#detI').value.trim(), amb=$('#ambI').value.trim();
+    const est=$('#estI').value.trim(), luz=$('#luzI').value.trim(), enc=$('#encI').value.trim(), neg=$('#negI').value.trim();
+    const ratio=$('#ratioI').value, res=$('#resI').value;
+    if(tema) p.push(tema); if(det) p.push(det); if(amb) p.push(amb);
+    if(est) p.push('estilo '+est); if(luz) p.push('iluminación '+luz); if(enc) p.push(enc); if(neg) p.push('sin '+neg);
+    const meta = `— relación de aspecto ${ratio}, resolución ${res}`;
+    $('#outImg').textContent = (p.join(', ') + ' ' + meta).trim();
+  }
+  function genVideo(){
+    let s='';
+    const tema=$('#temaV').value.trim(), amb=$('#ambV').value.trim(), act=$('#actV').value.trim();
+    const film=$('#filmV').value.trim(), cam=$('#camV').value.trim(), luz=$('#luzV').value.trim();
+    const dur=$('#durV').value.trim(), tran=$('#tranV').value.trim(), snd=$('#sndV').value.trim();
+    if(tema) s+=`${tema}. `; if(amb) s+=`Contexto: ${amb}. `; if(act) s+=`Acciones: ${act}. `;
+    if(film) s+=`Estilo de filmación: ${film}. `; if(cam) s+=`Cámara: ${cam}. `;
+    if(luz) s+=`Luz/Paleta: ${luz}. `; if(dur) s+=`Duración/Formato: ${dur}. `; if(tran) s+=`Transiciones: ${tran}. `; if(snd) s+=`Sonido: ${snd}. `;
+    $('#outVid').textContent = s.trim();
+  }
+  $('#genImg').addEventListener('click', genImagen);
+  $('#genVid').addEventListener('click', genVideo);
+
+  // Clear / Random
+  function clearImg(){ ['temaI','ambI','detI','estI','luzI','encI','negI'].forEach(id=>$('#'+id).value=''); }
+  function clearVid(){ ['temaV','ambV','actV','filmV','camV','luzV','durV','tranV','sndV'].forEach(id=>$('#'+id).value=''); }
+  $('#clearImg').addEventListener('click', ()=>{ clearImg(); $('#outImg').textContent=''; });
+  $('#clearVid').addEventListener('click', ()=>{ clearVid(); $('#outVid').textContent=''; });
+
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  $('#randImg').addEventListener('click', ()=>{
+    $('#estI').value = pick(LIB.estilos.dos_d.concat(LIB.estilos.tres_d).concat(LIB.estilos.graficos));
+    $('#encI').value = pick(LIB.planos.tipos.concat(LIB.planos.angulos));
+    $('#luzI').value = pick(LIB.iluminacion.natural.concat(LIB.iluminacion.artificial));
+  });
+  $('#randVid').addEventListener('click', ()=>{
+    $('#filmV').value = pick(LIB.estilos.tres_d.concat(LIB.estilos.fotografia).concat(['cinematográfico moderno','documental naturalista']));
+    $('#camV').value = pick(LIB.camara_mov.movimientos);
+    $('#luzV').value = pick(LIB.iluminacion.natural.concat(LIB.iluminacion.artificial));
+    $('#durV').value = pick(["8s, 16:9, 24 fps","10s, 16:9, 24 fps","12s, 21:9, 24 fps","15s, 9:16, 30 fps"]);
+  });
+
+  async function copyText(id){ const txt=$(id).textContent.trim(); if(!txt){ toast('Nada que copiar'); return; } try{ await navigator.clipboard.writeText(txt); toast('Copiado'); }catch{ toast('No se pudo copiar'); } }
+  $('#copyImg').addEventListener('click', ()=>copyText('#outImg'));
+  $('#copyVid').addEventListener('click', ()=>copyText('#outVid'));
+  function exportTxt(id, name){ const txt=$(id).textContent.trim(); if(!txt){ toast('Genera un prompt'); return; } const blob=new Blob([txt],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+  $('#exportImg').addEventListener('click', ()=>exportTxt('#outImg','prompt_imagen.txt'));
+  $('#exportVid').addEventListener('click', ()=>exportTxt('#outVid','prompt_video.txt'));
+
+  // ---------- Presets & search state ----------
+  const LS_IMG = 'customPresets_IMG_v9';
+  const LS_VID = 'customPresets_VID_v9';
+  function getCustom(mode){ return JSON.parse(localStorage.getItem(mode==='img'?LS_IMG:LS_VID) || '[]'); }
+  function setCustom(mode, arr){ localStorage.setItem(mode==='img'?LS_IMG:LS_VID, JSON.stringify(arr)); }
+  function getAllPresets(){ return { img: EMBED_PRESETS.imagen_presets.concat(getCustom('img')), vid: EMBED_PRESETS.video_presets.concat(getCustom('vid')) }; }
+
+  const searchState = { q:'', cat:'', mode:'img' };
+
+  const selCatPanel = $('#selCatPanel');
+  const selModePanel = $('#selModePanel');
+
+  function uniqueCats(list){ return Array.from(new Set(list.map(p=>p.categoria).filter(Boolean))); }
+
+  function populatePanelFilters(){
+    selModePanel.value = searchState.mode;
+    const cats = uniqueCats(getAllPresets()[searchState.mode]);
+    const cur = searchState.cat;
+    selCatPanel.innerHTML = '<option value="">Todas las categorías</option>';
+    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; selCatPanel.appendChild(o); });
+    if(cur && cats.includes(cur)) selCatPanel.value = cur;
+  }
+
+  function applyPresetToForm(mode, p){
+    function appendVal(el, v){ const base=(el.value||'').trim(); el.value = base ? base+', '+v : v; }
+    if(mode==='img'){
+      if(p.estilo) appendVal($('#estI'), p.estilo);
+      if(p.iluminacion) appendVal($('#luzI'), p.iluminacion);
+      if(p.encuadre) appendVal($('#encI'), p.encuadre);
+      if(p.formato){
+        const m = /([0-9]+:[0-9]+)|([0-9]{3,}x[0-9]{3,})/g;
+        const parts = p.formato.match(m)||[];
+        parts.forEach(x=>{ if(x.includes(':')) $('#ratioI').value=x; if(x.includes('x')) $('#resI').value=x; });
+      }
+      toast('Preset aplicado a Imagen');
+    }else{
+      if(p.estilo) appendVal($('#filmV'), p.estilo);
+      if(p.iluminacion) appendVal($('#luzV'), p.iluminacion);
+      if(p.encuadre) appendVal($('#camV'), p.encuadre);
+      if(p.formato) $('#durV').value = p.formato;
+      toast('Preset aplicado a Video');
+    }
+  }
+
+  function renderPresetList(){
+    const mode = searchState.mode;
+    const query = (searchState.q||'').toLowerCase();
+    const cat = searchState.cat;
+    const list = getAllPresets()[mode].filter(p=>{
+      const hay = (p.nombre+' '+(p.descripcion||'')+' '+(p.estilo||'')).toLowerCase();
+      const okQ = !query || hay.includes(query);
+      const okC = !cat || p.categoria===cat;
+      return okQ && okC;
+    });
+    const wrap = $('#presetList'); wrap.innerHTML='';
+    list.forEach(p=>{
+      const item = document.createElement('div');
+      item.className='preset-item';
+      item.innerHTML = `
+        <div class="preset-head">
+          <div><strong>${p.nombre}</strong> <span class="badge preset-cat">${p.categoria||'—'}</span></div>
+          <div class="preset-actions">
+            <button class="btn small ok" data-act="apply" type="button">Aplicar</button>
+          </div>
+        </div>
+        <div class="muted">${p.descripcion||''}</div>`;
+      item.addEventListener('mousemove', (e)=>showTooltip(e,p));
+      item.addEventListener('mouseleave', hideTooltip);
+      const btn = item.querySelector('[data-act="apply"]');
+      if(btn){ btn.addEventListener('click', (ev)=>{ ev.stopPropagation(); applyPresetToForm(mode,p); }); }
+      wrap.appendChild(item);
+    });
+  }
+
+  // Panels filters interactions
+  selModePanel.addEventListener('change', ()=>{
+    searchState.mode = selModePanel.value;
+    populatePanelFilters();
+    if(searchState.mode==='img'){ document.querySelector('.tab[data-mode="img"]').click(); }
+    else{ document.querySelector('.tab[data-mode="vid"]').click(); }
+    renderPresetList();
+  });
+  selCatPanel.addEventListener('change', ()=>{
+    searchState.cat = selCatPanel.value;
+    renderPresetList();
+  });
+
+  // Tabs switch (sync state)
+  function setMode(mode){
+    if(mode==='img'){
+      $('#form-img').classList.remove('hide'); $('#form-vid').classList.add('hide');
+      $$('.tab').forEach(t=>t.classList.remove('active')); $$('.tab')[0].classList.add('active');
+      $('#formTitle').textContent='Modo Imagen';
+      searchState.mode='img';
+      populatePanelFilters();
+      renderPresetList();
+    }else{
+      $('#form-img').classList.add('hide'); $('#form-vid').classList.remove('hide');
+      $$('.tab').forEach(t=>t.classList.remove('active')); $$('.tab')[1].classList.add('active');
+      $('#formTitle').textContent='Modo Video (Sora)';
+      searchState.mode='vid';
+      populatePanelFilters();
+      renderPresetList();
+    }
+  }
+  $$('.tab').forEach(t=>t.addEventListener('click', ()=>setMode(t.dataset.mode)));
+
+  // Search dialog (text only, live)
+  const dlg = $('#dlgSearch');
+  const openBtn = $('#openSearch');
+  const qInput = $('#qPreset');
+  openBtn.addEventListener('click', ()=>{
+    if(typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open','');
+    qInput.value = searchState.q || '';
+    setTimeout(()=>qInput.focus(), 50);
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='/' && !e.target.matches('input,textarea')){ e.preventDefault(); openBtn.click(); }
+  });
+  qInput.addEventListener('input', ()=>{
+    searchState.q = qInput.value.trim().toLowerCase();
+    renderPresetList();
+  });
+  $('#closeSearch').addEventListener('click', ()=> dlg.close());
+
+  // Save preset buttons & export
+  function getCustomKey(mode){ return mode==='img'?LS_IMG:LS_VID; }
+  function savePreset(mode){
+    const name = prompt('Nombre del nuevo preset:');
+    if(!name) return;
+    if(mode==='img'){
+      const p = { id: Date.now(), nombre: name, descripcion: ($('#temaI').value||'').slice(0,120), categoria: 'Personal', estilo: $('#estI').value, iluminacion: $('#luzI').value, encuadre: $('#encI').value, formato: $('#ratioI').value + ' · ' + $('#resI').value };
+      const arr = getCustom('img'); arr.push(p); setCustom('img',arr);
+      toast('Preset de Imagen guardado');
+    }else{
+      const p = { id: Date.now(), nombre: name, descripcion: ($('#temaV').value||'').slice(0,120), categoria: 'Personal', estilo: $('#filmV').value, iluminacion: $('#luzV').value, encuadre: $('#camV').value, formato: ($('#durV').value||'') || '16:9 · 24fps · 10s' };
+      const arr = getCustom('vid'); arr.push(p); setCustom('vid',arr);
+      toast('Preset de Video guardado');
+    }
+    renderPresetList();
+  }
+  $('#savePresetImg').addEventListener('click', ()=>savePreset('img'));
+  $('#savePresetVid').addEventListener('click', ()=>savePreset('vid'));
+
+  $('#exportJSON').addEventListener('click', ()=>{
+    const data = {
+      imagen_presets: EMBED_PRESETS.imagen_presets.concat(getCustom('img')),
+      video_presets: EMBED_PRESETS.video_presets.concat(getCustom('vid'))
+    };
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='presets_export.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#clearCustom').addEventListener('click', ()=>{
+    if(!confirm('¿Eliminar todos los presets personalizados?')) return;
+    localStorage.removeItem(LS_IMG);
+    localStorage.removeItem(LS_VID);
+    toast('Personalizados eliminados'); renderPresetList();
+  });
+
+  // Init
+  function init(){
+    // Preload selects
+    populatePanelFilters();
+    renderPresetList();
+    setMode('img');
+  }
+  init();
+})();
+
+// Close dropdown and scroll to textarea on Apply
+document.querySelectorAll('.apply-btn').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    const section = e.target.closest('.section-block') || document;
+    // Close any open details in section
+    section.querySelectorAll('details[open]').forEach(d=> d.removeAttribute('open'));
+    // Scroll to textarea
+    const ta = section.querySelector('textarea');
+    if(ta){
+      ta.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  });
+});
+
+</script>
+<script>
+(function(){
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  $$('.drop').forEach(d => {
+    const btn = d.querySelector('[data-apply]');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.apply;
+      setTimeout(()=>{
+        if(d.hasAttribute('open')){
+          d.classList.add('closing');
+          setTimeout(()=>{ d.removeAttribute('open'); d.classList.remove('closing'); }, 220);
+        }
+        const ta = document.getElementById(id);
+        if(ta){ ta.classList.add('flash'); ta.scrollIntoView({behavior:'smooth', block:'center'});
+          setTimeout(()=>ta.classList.remove('flash'), 900); }
+      }, 0);
+    });
+  });
+})();
+</script>
+<script>
+// Ctrl/Cmd+Enter => generar | Shift+Enter => salto de línea normal
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && e.shiftKey){ return; }
+  if(!(e.key==='Enter' && (e.ctrlKey || e.metaKey))) return;
+  e.preventDefault();
+  try{
+    const imgForm = document.querySelector('#form-img');
+    const isImg = imgForm && !imgForm.classList.contains('hide');
+    if(isImg){ (window.genImagen||(()=>document.getElementById('genImg')?.click()))(); }
+    else{ (window.genVideo||(()=>document.getElementById('genVid')?.click()))(); }
+  }catch(_){}
+});
+</script>
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const qInline = $('#qPresetInline');
+  const qDialog = $('#qPreset'); // del modal oculto
+  const list = $('#presetList');
+
+  // Reutiliza el listener original del input del modal
+  function dispatchToOriginal(){
+    if(qDialog){
+      qDialog.value = qInline.value;
+      qDialog.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+  }
+  if(qInline){ qInline.addEventListener('input', dispatchToOriginal); }
+
+  // Actualiza contador con Mutations
+  function updateCount(){
+    if(!list) return;
+    const n = list.children ? list.children.length : 0;
+    const el = document.getElementById('resultCount');
+    if(el) el.textContent = n ? `${n} resultado${n===1?'':'s'}` : '0 resultados';
+  }
+  if(list){
+    new MutationObserver(updateCount).observe(list, {childList:true});
+    updateCount();
+  }
+
+  // Botón de lupa antiguo: enfoca el inline
+  const openBtn = $('#openSearch');
+  if(openBtn && qInline){
+    openBtn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopImmediatePropagation(); qInline.focus(); qInline.select();
+    }, true);
+  }
+  // Hotkey '/': enfoca inline
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='/' && !e.target.matches('input,textarea,[contenteditable="true"]')){
+      e.preventDefault(); qInline?.focus(); qInline?.select();
+    }
+  }, true);
+})();
+</script>
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // Autosave / restore por modo
+  const FORM_IMG_KEY='FORM_IMG_V1', FORM_VID_KEY='FORM_VID_V1';
+  function serialize(rootSel){
+    const data={}; $$(`${rootSel} input, ${rootSel} textarea, ${rootSel} select`).forEach(el=>{
+      if(!el.id) return; data[el.id] = (el.type==='checkbox'||el.type==='radio') ? !!el.checked : el.value;
+    }); return data;
+  }
+  function restore(rootSel, data){
+    if(!data) return; Object.keys(data).forEach(id=>{
+      const el = document.getElementById(id); if(!el) return;
+      if(el.type==='checkbox'||el.type==='radio') el.checked=!!data[id]; else el.value=data[id];
+    });
+  }
+  try{
+    restore('#form-img', JSON.parse(localStorage.getItem(FORM_IMG_KEY)||'null'));
+    restore('#form-vid', JSON.parse(localStorage.getItem(FORM_VID_KEY)||'null'));
+  }catch(_){}
+  function bind(rootSel, key){
+    $$(`${rootSel} input, ${rootSel} textarea, ${rootSel} select`).forEach(el=>{
+      el.addEventListener('input', ()=>{ try{ localStorage.setItem(key, JSON.stringify(serialize(rootSel))); }catch(_){}});
+      el.addEventListener('change', ()=>{ try{ localStorage.setItem(key, JSON.stringify(serialize(rootSel))); }catch(_){}});
+    });
+  }
+  bind('#form-img', FORM_IMG_KEY); bind('#form-vid', FORM_VID_KEY);
+
+  // Exportar/Importar presets a JSON
+  const exportBtn = $('#exportJSON');
+  if(exportBtn){
+    // crea Importar junto a Exportar si no existe
+    if(!$('#importJSON')){
+      const importBtn = document.createElement('button');
+      importBtn.id='importJSON'; importBtn.type='button'; importBtn.className='btn'; importBtn.textContent='📥 Importar JSON';
+      exportBtn.insertAdjacentElement('afterend', importBtn);
+      importBtn.addEventListener('click', ()=>{
+        const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+        inp.addEventListener('change', ()=>{
+          const f=inp.files&&inp.files[0]; if(!f) return;
+          const r=new FileReader(); r.onload=()=>{
+            try{
+              const obj=JSON.parse(r.result);
+              if(Array.isArray(obj.customImg)) localStorage.setItem('CUSTOM_PRESETS_IMG', JSON.stringify(obj.customImg));
+              if(Array.isArray(obj.customVid)) localStorage.setItem('CUSTOM_PRESETS_VID', JSON.stringify(obj.customVid));
+              // refresca lista
+              const sel=document.getElementById('selCatPanel');
+              if(sel){ const old=sel.value; sel.value=''; sel.dispatchEvent(new Event('change',{bubbles:true})); sel.value=old; sel.dispatchEvent(new Event('change',{bubbles:true})); }
+              window.renderPresetList&&renderPresetList();
+              window.toast&&toast('Importado');
+            }catch(_){ window.toast&&toast('Archivo inválido'); }
+          };
+          r.readAsText(f);
+        });
+        inp.click();
+      });
+    }
+    exportBtn.addEventListener('click', ()=>{
+      try{
+        const payload={version:'1.0', ts:Date.now(),
+          builtinsCount:(Array.isArray(window.presets)?presets.length:0),
+          customImg: JSON.parse(localStorage.getItem('CUSTOM_PRESETS_IMG')||'[]'),
+          customVid: JSON.parse(localStorage.getItem('CUSTOM_PRESETS_VID')||'[]')
+        };
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='presets.json';
+        document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+        window.toast&&toast('Exportado como presets.json');
+      }catch(_){ window.toast&&toast('No se pudo exportar'); }
+    });
+  }
+})();
+</script>
+</body>
+</html>
