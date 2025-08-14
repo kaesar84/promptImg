@@ -258,12 +258,43 @@ select{ padding-right:32px; } .toolbar-selects select{ min-width:150px; }
 /* Hide legacy search button (we use inline search now) */
 .presets-toolbar #openSearch{ display:none !important; }
 </style>
+<style id="brand-style">
+.brand-title{ font-weight:800; letter-spacing:.3px; }
+.brand-title .brand-accent{ color: var(--accent); }
+</style>
+<style id="brand-style-override">
+.brand-title{
+  font-weight: 800;
+  letter-spacing: .4px;
+  font-size: clamp(1.9rem, 4.2vw, 2.8rem);
+  line-height: 1.05;
+  margin-bottom: 12px; /* spacing under the brand, no side effects */
+  display: inline-block;
+}
+.brand-title .brand-accent{ color: var(--accent); }
+@media (max-width: 480px){
+  .brand-title{ font-size: 1.6rem; margin-bottom: 10px; }
+}
+</style>
+<style id="brand-sub-override">
+.brand-sub{
+  font-size: clamp(.9rem, 1.6vw, 1rem);
+  opacity: .78;
+  margin-top: 6px;
+  margin-bottom: 20px; /* extra space below subtitle */
+}
+</style>
+<style id="brand-sub-mobile-hide">
+@media (max-width: 600px){
+  .brand-sub{ display:none !important; }
+}
+</style>
 </head>
 <body>
 <div class="header">
 <div>
-<h1>🧰 Generador de Prompts — Full Offline (v9)</h1>
-<p class="lead">Corrección de “Aplicar preset”, filtros siempre visibles y búsqueda con resultados en vivo.</p>
+<h1 class="brand-title">prompt<span class="brand-accent">Img</span></h1>
+<p class="lead brand-sub">Generador local de prompts para imagen y video con presets integrados y filtros.</p>
 </div>
 <button aria-label="Cambiar tema" class="theme-btn" id="themeBtn" title="Cambiar tema">
 <svg fill="none" id="iconMoon" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
